@@ -1,0 +1,13 @@
+# Migration
+go run pkg/database/migration/migration.go ./env/dev/.env.auth
+go run pkg/database/migration/migration.go ./env/dev/.env.book
+go run pkg/database/migration/migration.go ./env/dev/.env.payment
+go run pkg/database/migration/migration.go ./env/dev/.env.shelf
+go run pkg/database/migration/migration.go ./env/dev/.env.user
+
+# Start Server
+go run main.go ./env/dev/.env.auth
+go run main.go ./env/dev/.env.book
+go run main.go ./env/dev/.env.payment
+go run main.go ./env/dev/.env.shelf
+go run main.go ./env/dev/.env.user

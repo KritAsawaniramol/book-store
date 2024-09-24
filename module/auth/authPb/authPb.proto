@@ -1,0 +1,17 @@
+// proto version
+syntax = "proto3";
+
+// Package name
+option go_package = "github.com/kritAsawaniramol/book-store";
+
+message AccessTokenSearchReq {
+    string accessToken = 1;
+}
+
+message AccessTokenSearchRes {
+    string isValid = 1;
+}
+
+service AuthGrpcService {
+    rpc AccessTokenSearch(AccessTokenSearchReq) returns (AccessTokenSearchRes);
+}

@@ -1,0 +1,9 @@
+// proto version
+syntax = "proto3";
+
+// Package name
+option go_package = "github.com/kritAsawaniramol/book-store";
+
+
+service BookGrpcService {
+}
