@@ -10,7 +10,7 @@ import (
 )
 
 type UserHttpHandler interface {
-	register(ctx *gin.Context)
+	Register(ctx *gin.Context)
 }
 
 type userHttpHandlerImpl struct {
@@ -18,7 +18,7 @@ type userHttpHandlerImpl struct {
 }
 
 // register implements UserHttpHandler.
-func (u *userHttpHandlerImpl) register(ctx *gin.Context) {
+func (u *userHttpHandlerImpl) Register(ctx *gin.Context) {
 	wrapper := request.ContextWrapper(ctx)
 	req := &user.UserRegisterReq{}
 	if err := wrapper.Bind(req); err != nil {

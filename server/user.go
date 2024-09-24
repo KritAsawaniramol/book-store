@@ -13,7 +13,8 @@ func (g *ginServer) userService() {
 	queueHandler := userHandler.NewUserQueueHandler(usecase, g.cfg)
 	grpcHandler := userHandler.NewUserQueueHandler(usecase, g.cfg)
 
-	_ = httpHandler
 	_ = grpcHandler
 	_ = queueHandler
+	
+	g.app.POST("/register", httpHandler.Register)
 }

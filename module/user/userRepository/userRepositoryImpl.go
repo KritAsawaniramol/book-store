@@ -3,6 +3,7 @@ package userRepository
 import (
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/kritAsawaniramol/book-store/module/user"
 	"gorm.io/gorm"
@@ -15,8 +16,11 @@ type userRepositoryImpl struct {
 // createOneUser implements UserRepository.
 func (u *userRepositoryImpl) CreateOneUser(in *user.User) (uint, error) {
 	if err := u.db.Create(in).Error; err != nil {
-		log.Printf("error: createOneUser: %s\n", err.Error())
-		return 0, errors.New("create user failed")
+		log.Printf("error: CreateOneUser: %s\n", err.Error())
+		if strings.HasSuffix(err.Error(), "(SQLSTATE 23505)") {
+			return 0, errors.New("error: username already in use")
+		}
+		return 0, errors.New("error: create user failed")
 	}
 	return in.ID, nil
 }

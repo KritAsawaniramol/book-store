@@ -24,7 +24,6 @@ func (c *contextWrapper) Bind(data any) error {
 	if err := c.Context.Bind(data); err != nil {
 		log.Printf("Error: Bind data failed: %s", err.Error())
 		return errors.New("errors: bad requset")
-
 	}
 
 	if err := c.validator.Struct(data); err != nil {
