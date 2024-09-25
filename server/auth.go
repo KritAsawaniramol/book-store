@@ -1,19 +1,15 @@
 package server
 
 import (
-	"github.com/kritAsawaniramol/book-store/module/user/userHandler"
-	"github.com/kritAsawaniramol/book-store/module/user/userRepository"
-	"github.com/kritAsawaniramol/book-store/module/user/userUsecase"
+	"github.com/kritAsawaniramol/book-store/module/auth/authHandler"
+	"github.com/kritAsawaniramol/book-store/module/auth/authRepository"
+	"github.com/kritAsawaniramol/book-store/module/auth/authUsecase"
 )
 
 func (g *ginServer) authService() {
-	repo := userRepository.NewUserRepositoryImpl(g.db)
-	usecase := userUsecase.NewUserUsecaseImpl(repo)
-	httpHandler := userHandler.NewUserHttpHandler(usecase)
-	queueHandler := userHandler.NewUserQueueHandler(usecase, g.cfg)
-	grpcHandler := userHandler.NewUserGrpcHandler(usecase)
+	repo := authRepository.NewAuthRepositoryImpl(g.db)
+	usecase := authUsecase.NewAuthUsecaseImpl(repo)
+	httpHandler := authHandler.NewAuthHttpHandlerImpl(usecase)
 
-	_ = httpHandler 
-	_ = queueHandler
-	_ = grpcHandler 
+	_ = httpHandler
 }

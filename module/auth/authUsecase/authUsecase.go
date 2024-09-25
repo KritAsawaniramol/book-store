@@ -1,1 +1,3 @@
-package authusecase
+package authUsecase
+
+type AuthUsecase interface{}

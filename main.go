@@ -17,7 +17,7 @@ func main() {
 		return os.Args[1]
 	}())
 
-	db := database.NewPostgresDatabase(&cfg)
+	db := database.NewPostgresDatabase(cfg)
 
-	server.NewGinServer(&cfg, db.GetDb()).Start()
+	server.NewGinServer(cfg, db.GetDb()).Start()
 }

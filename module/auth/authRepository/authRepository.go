@@ -1,1 +1,3 @@
-package authrepository
+package authRepository
+
+type AuthRepository interface{}
