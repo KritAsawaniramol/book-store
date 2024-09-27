@@ -12,6 +12,11 @@ type authUsecaseImpl struct {
 	authRepository authRepository.AuthRepository
 }
 
+// Logout implements AuthUsecase.
+func (a *authUsecaseImpl) Logout(req *auth.LogoutReq) error {
+	return a.authRepository.DeleteOneUserCredentialByID(req.CredentialId)
+}
+
 // Login implements AuthUsecase.
 func (a *authUsecaseImpl) Login(cfg *config.Config, req *auth.LoginReq) (*auth.LoginRes, error) {
 	userProfile, err := a.authRepository.FindOneUserProfile(
@@ -23,8 +28,6 @@ func (a *authUsecaseImpl) Login(cfg *config.Config, req *auth.LoginReq) (*auth.L
 	if err != nil {
 		return nil, err
 	}
-
-	
 
 	credentialID, err := a.authRepository.CreateOneUserCredential(&auth.Credential{
 		UserID: uint(userProfile.Id),
