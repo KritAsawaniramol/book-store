@@ -98,7 +98,8 @@ func LoadConfig(path string) *Config {
 		defer lock.Unlock()
 		if config == nil {
 			if err := godotenv.Load(path); err != nil {
-				log.Fatal("Error loading .env file")
+				
+				log.Fatalf("Error loading .env file: %s", err.Error())
 			}
 			appPort, err := strconv.Atoi(os.Getenv("APP_PORT"))
 			if err != nil {

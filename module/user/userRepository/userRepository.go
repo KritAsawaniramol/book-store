@@ -6,4 +6,5 @@ import (
 
 type UserRepository interface {
 	CreateOneUser(in *user.User) (uint, error)
+	GetOneUser(in *user.User) (*user.User, error)
 }

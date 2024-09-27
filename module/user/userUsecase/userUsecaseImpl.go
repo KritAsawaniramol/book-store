@@ -2,15 +2,40 @@ package userUsecase
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/kritAsawaniramol/book-store/module/user"
+	"github.com/kritAsawaniramol/book-store/module/user/userPb"
 	"github.com/kritAsawaniramol/book-store/module/user/userRepository"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type userUsecaseImpl struct {
 	userRepository userRepository.UserRepository
+}
+
+// FindOneUserByUsernameAndPassword implements UserUsecase.
+func (u *userUsecaseImpl) FindOneUserByUsernameAndPassword(username string, password string) (*userPb.UserProfile, error) {
+	user, err := u.userRepository.GetOneUser(&user.User{Username: username})
+	if err != nil {
+		return nil, err
+	}
+
+	//compare password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		log.Printf("error: FindOneUserByUsernameAndPassword: %s\n", err.Error())
+		return nil, errors.New("error: password is incorrect")
+	}
+	return &userPb.UserProfile{
+		Id:        uint64(user.ID),
+		Username:  user.Username,
+		RoleId:    uint32(user.RoleID),
+		Coin:      user.Coin,
+		CreatedAt: timestamppb.New(user.CreatedAt),
+		UpdatedAt: timestamppb.New(user.UpdatedAt),
+	}, nil
 }
 
 // Register implements UserUsecase.

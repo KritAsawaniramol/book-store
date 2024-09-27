@@ -11,3 +11,10 @@ go run main.go ./env/dev/.env.book
 go run main.go ./env/dev/.env.payment
 go run main.go ./env/dev/.env.shelf
 go run main.go ./env/dev/.env.user
+
+
+##Regenerate gRPC code
+#User
+protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    ./module/user/userPb/userPb.proto

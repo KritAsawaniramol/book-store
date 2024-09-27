@@ -1,3 +1,10 @@
 package authUsecase
 
-type AuthUsecase interface{}
+import (
+	"github.com/kritAsawaniramol/book-store/config"
+	"github.com/kritAsawaniramol/book-store/module/auth"
+)
+
+type AuthUsecase interface {
+	Login(cfg *config.Config, req *auth.LoginReq) (*auth.LoginRes, error)
+}

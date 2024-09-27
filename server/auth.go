@@ -9,7 +9,7 @@ import (
 func (g *ginServer) authService() {
 	repo := authRepository.NewAuthRepositoryImpl(g.db)
 	usecase := authUsecase.NewAuthUsecaseImpl(repo)
-	httpHandler := authHandler.NewAuthHttpHandlerImpl(usecase)
+	httpHandler := authHandler.NewAuthHttpHandlerImpl(g.cfg, usecase)
 
-	_ = httpHandler
+	g.app.POST("/auth/login", httpHandler.Login)
 }
