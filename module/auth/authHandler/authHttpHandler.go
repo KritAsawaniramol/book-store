@@ -1,7 +1,6 @@
 package authHandler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -31,7 +30,6 @@ func (a *authHttpHandlerImpl) Login(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-
 
 	res, err := a.authUsecase.Login(a.cfg, req)
 	if err != nil {
