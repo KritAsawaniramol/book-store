@@ -16,6 +16,15 @@ type authRepositoryImpl struct {
 	db *gorm.DB
 }
 
+// DeleteOneUserCredentialByID implements AuthRepository.
+func (a *authRepositoryImpl) DeleteOneUserCredentialByID(credentialID uint) error {
+	if err := a.db.Delete(&auth.Credential{}, credentialID).Error; err != nil {
+		log.Printf("error: DeleteOneUserCredentialByID: %s\n", err.Error())
+		return errors.New("error: delete user credential failed")
+	}
+	return nil
+}
+
 // GetOneUserCredential implements AuthRepository.
 func (a *authRepositoryImpl) GetOneUserCredential(in *auth.Credential) (*auth.Credential, error) {
 	credential := &auth.Credential{}
@@ -39,7 +48,7 @@ func (a *authRepositoryImpl) CreateOneUserCredential(in *auth.Credential) (uint,
 }
 
 // findUserProfile implements AuthRepository.
-func (a *authRepositoryImpl) FindOneUserProfile( grpcUrl string, req *userPb.FindUserProfileReq) (*userPb.UserProfile, error) {
+func (a *authRepositoryImpl) FindOneUserProfile(grpcUrl string, req *userPb.FindUserProfileReq) (*userPb.UserProfile, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 

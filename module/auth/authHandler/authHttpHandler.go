@@ -12,7 +12,8 @@ import (
 
 type (
 	AuthHttpHandler interface {
-		Login(*gin.Context)
+		Login(ctx *gin.Context)
+		Logout(ctx *gin.Context)
 	}
 
 	authHttpHandlerImpl struct {
@@ -20,6 +21,22 @@ type (
 		authUsecase authUsecase.AuthUsecase
 	}
 )
+
+// Logout implements AuthHttpHandler.
+func (a *authHttpHandlerImpl) Logout(ctx *gin.Context) {
+	wrapper := request.ContextWrapper(ctx)
+	req := &auth.LogoutReq{}
+	err := wrapper.Bind(req)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	if err := a.authUsecase.Logout(req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.Status(http.StatusOK)
+}
 
 // Login implements AuthHttpHandler.
 func (a *authHttpHandlerImpl) Login(ctx *gin.Context) {

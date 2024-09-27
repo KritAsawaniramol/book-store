@@ -12,4 +12,5 @@ func (g *ginServer) authService() {
 	httpHandler := authHandler.NewAuthHttpHandlerImpl(g.cfg, usecase)
 
 	g.app.POST("/auth/login", httpHandler.Login)
+	g.app.POST("/auth/logout", httpHandler.Logout)
 }

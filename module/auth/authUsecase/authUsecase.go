@@ -7,4 +7,5 @@ import (
 
 type AuthUsecase interface {
 	Login(cfg *config.Config, req *auth.LoginReq) (*auth.LoginRes, error)
+	Logout(req *auth.LogoutReq) error
 }
