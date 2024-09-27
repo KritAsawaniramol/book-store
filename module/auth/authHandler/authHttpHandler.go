@@ -14,6 +14,7 @@ type (
 	AuthHttpHandler interface {
 		Login(ctx *gin.Context)
 		Logout(ctx *gin.Context)
+		RefreshToken(ctx *gin.Context)
 	}
 
 	authHttpHandlerImpl struct {
@@ -21,6 +22,25 @@ type (
 		authUsecase authUsecase.AuthUsecase
 	}
 )
+
+// RefreshToken implements AuthHttpHandler.
+func (a *authHttpHandlerImpl) RefreshToken(ctx *gin.Context) {
+	wrapper := request.ContextWrapper(ctx)
+	req := &auth.RefreshTokenReq{}
+	err := wrapper.Bind(req)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	credentialRes, err := a.authUsecase.RefreshToken(a.cfg, req)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	
+	ctx.JSON(http.StatusOK, credentialRes)
+}
 
 // Logout implements AuthHttpHandler.
 func (a *authHttpHandlerImpl) Logout(ctx *gin.Context) {

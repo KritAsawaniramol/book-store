@@ -13,4 +13,5 @@ func (g *ginServer) authService() {
 
 	g.app.POST("/auth/login", httpHandler.Login)
 	g.app.POST("/auth/logout", httpHandler.Logout)
+	g.app.POST("/auth/refresh-token", httpHandler.RefreshToken)
 }

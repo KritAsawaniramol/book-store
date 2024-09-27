@@ -19,14 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserGrpcService_FindUserProfile_FullMethodName = "/userPb.UserGrpcService/FindUserProfile"
+	UserGrpcService_FindUserProfileToLogin_FullMethodName      = "/userPb.UserGrpcService/FindUserProfileToLogin"
+	UserGrpcService_FindOneUserProfileToRefresh_FullMethodName = "/userPb.UserGrpcService/FindOneUserProfileToRefresh"
 )
 
 // UserGrpcServiceClient is the client API for UserGrpcService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserGrpcServiceClient interface {
-	FindUserProfile(ctx context.Context, in *FindUserProfileReq, opts ...grpc.CallOption) (*UserProfile, error)
+	FindUserProfileToLogin(ctx context.Context, in *FindUserProfileToLoginReq, opts ...grpc.CallOption) (*UserProfile, error)
+	FindOneUserProfileToRefresh(ctx context.Context, in *FindOneUserProfileToRefreshReq, opts ...grpc.CallOption) (*UserProfile, error)
 }
 
 type userGrpcServiceClient struct {
@@ -37,10 +39,20 @@ func NewUserGrpcServiceClient(cc grpc.ClientConnInterface) UserGrpcServiceClient
 	return &userGrpcServiceClient{cc}
 }
 
-func (c *userGrpcServiceClient) FindUserProfile(ctx context.Context, in *FindUserProfileReq, opts ...grpc.CallOption) (*UserProfile, error) {
+func (c *userGrpcServiceClient) FindUserProfileToLogin(ctx context.Context, in *FindUserProfileToLoginReq, opts ...grpc.CallOption) (*UserProfile, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UserProfile)
-	err := c.cc.Invoke(ctx, UserGrpcService_FindUserProfile_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, UserGrpcService_FindUserProfileToLogin_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userGrpcServiceClient) FindOneUserProfileToRefresh(ctx context.Context, in *FindOneUserProfileToRefreshReq, opts ...grpc.CallOption) (*UserProfile, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UserProfile)
+	err := c.cc.Invoke(ctx, UserGrpcService_FindOneUserProfileToRefresh_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +63,8 @@ func (c *userGrpcServiceClient) FindUserProfile(ctx context.Context, in *FindUse
 // All implementations must embed UnimplementedUserGrpcServiceServer
 // for forward compatibility.
 type UserGrpcServiceServer interface {
-	FindUserProfile(context.Context, *FindUserProfileReq) (*UserProfile, error)
+	FindUserProfileToLogin(context.Context, *FindUserProfileToLoginReq) (*UserProfile, error)
+	FindOneUserProfileToRefresh(context.Context, *FindOneUserProfileToRefreshReq) (*UserProfile, error)
 	mustEmbedUnimplementedUserGrpcServiceServer()
 }
 
@@ -62,8 +75,11 @@ type UserGrpcServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedUserGrpcServiceServer struct{}
 
-func (UnimplementedUserGrpcServiceServer) FindUserProfile(context.Context, *FindUserProfileReq) (*UserProfile, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FindUserProfile not implemented")
+func (UnimplementedUserGrpcServiceServer) FindUserProfileToLogin(context.Context, *FindUserProfileToLoginReq) (*UserProfile, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindUserProfileToLogin not implemented")
+}
+func (UnimplementedUserGrpcServiceServer) FindOneUserProfileToRefresh(context.Context, *FindOneUserProfileToRefreshReq) (*UserProfile, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindOneUserProfileToRefresh not implemented")
 }
 func (UnimplementedUserGrpcServiceServer) mustEmbedUnimplementedUserGrpcServiceServer() {}
 func (UnimplementedUserGrpcServiceServer) testEmbeddedByValue()                         {}
@@ -86,20 +102,38 @@ func RegisterUserGrpcServiceServer(s grpc.ServiceRegistrar, srv UserGrpcServiceS
 	s.RegisterService(&UserGrpcService_ServiceDesc, srv)
 }
 
-func _UserGrpcService_FindUserProfile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FindUserProfileReq)
+func _UserGrpcService_FindUserProfileToLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindUserProfileToLoginReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserGrpcServiceServer).FindUserProfile(ctx, in)
+		return srv.(UserGrpcServiceServer).FindUserProfileToLogin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: UserGrpcService_FindUserProfile_FullMethodName,
+		FullMethod: UserGrpcService_FindUserProfileToLogin_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserGrpcServiceServer).FindUserProfile(ctx, req.(*FindUserProfileReq))
+		return srv.(UserGrpcServiceServer).FindUserProfileToLogin(ctx, req.(*FindUserProfileToLoginReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserGrpcService_FindOneUserProfileToRefresh_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindOneUserProfileToRefreshReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserGrpcServiceServer).FindOneUserProfileToRefresh(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserGrpcService_FindOneUserProfileToRefresh_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserGrpcServiceServer).FindOneUserProfileToRefresh(ctx, req.(*FindOneUserProfileToRefreshReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +146,12 @@ var UserGrpcService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*UserGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "FindUserProfile",
-			Handler:    _UserGrpcService_FindUserProfile_Handler,
+			MethodName: "FindUserProfileToLogin",
+			Handler:    _UserGrpcService_FindUserProfileToLogin_Handler,
+		},
+		{
+			MethodName: "FindOneUserProfileToRefresh",
+			Handler:    _UserGrpcService_FindOneUserProfileToRefresh_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

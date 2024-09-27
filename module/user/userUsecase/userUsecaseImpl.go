@@ -15,6 +15,24 @@ type userUsecaseImpl struct {
 	userRepository userRepository.UserRepository
 }
 
+// FindOneUserByID implements UserUsecase.
+func (u *userUsecaseImpl) FindOneUserByID(userID uint) (*userPb.UserProfile, error) {
+	condition := &user.User{}
+	condition.ID = userID
+	user, err := u.userRepository.GetOneUser(condition)
+	if err != nil {
+		return nil, err
+	}
+	return &userPb.UserProfile{
+		Id:        uint64(user.ID),
+		Username:  user.Username,
+		RoleId:    uint32(user.RoleID),
+		Coin:      user.Coin,
+		CreatedAt: timestamppb.New(user.CreatedAt),
+		UpdatedAt: timestamppb.New(user.UpdatedAt),
+	}, nil
+}
+
 // FindOneUserByUsernameAndPassword implements UserUsecase.
 func (u *userUsecaseImpl) FindOneUserByUsernameAndPassword(username string, password string) (*userPb.UserProfile, error) {
 	user, err := u.userRepository.GetOneUser(&user.User{Username: username})

@@ -12,8 +12,13 @@ type userGrpcHandler struct {
 	userPb.UnimplementedUserGrpcServiceServer
 }
 
-// FindUserProfile implements userPb.UserGrpcServiceServer.
-func (u *userGrpcHandler) FindUserProfile(ctx context.Context, req *userPb.FindUserProfileReq) (*userPb.UserProfile, error) {
+// FindOneUserProfileToRefresh implements userPb.UserGrpcServiceServer.
+func (u *userGrpcHandler) FindOneUserProfileToRefresh(ctx context.Context, req *userPb.FindOneUserProfileToRefreshReq) (*userPb.UserProfile, error) {
+	return u.userUsecase.FindOneUserByID(uint(req.UserId))
+}
+
+// FindUserProfileToLogin implements userPb.UserGrpcServiceServer.
+func (u *userGrpcHandler) FindUserProfileToLogin(ctx context.Context,req *userPb.FindUserProfileToLoginReq) (*userPb.UserProfile, error) {
 	return u.userUsecase.FindOneUserByUsernameAndPassword(req.Username, req.Password)
 }
 

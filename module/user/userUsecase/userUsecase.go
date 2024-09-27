@@ -8,4 +8,5 @@ import (
 type UserUsecase interface {
 	Register(registReq *user.UserRegisterReq) (uint, error)
 	FindOneUserByUsernameAndPassword(username string, password string) (*userPb.UserProfile, error)	
+	FindOneUserByID(userID uint) (*userPb.UserProfile, error)	
 }

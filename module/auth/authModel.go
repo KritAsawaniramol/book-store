@@ -19,7 +19,7 @@ type (
 	}
 
 	CredentialRes struct {
-		ID           uint      `json:"credential_id"`
+		ID           uint      `json:"id"`
 		UserID       uint      `json:"user_id"`
 		AccessToken  string    `json:"access_token"`
 		RefreshToken string    `json:"refresh_token"`
@@ -28,6 +28,11 @@ type (
 	}
 
 	LogoutReq struct {
-		CredentialId uint `json:"credential_id" validate:"required,max=64"`
+		CredentialID uint `json:"credential_id" validate:"required,max=64"`
+	}
+
+	RefreshTokenReq struct {
+		CredentialID uint   `json:"credential_id" validate:"required,max=64"`
+		RefreshToken string `json:"refresh_token" validate:"required,jwt,max=500"`
 	}
 )
