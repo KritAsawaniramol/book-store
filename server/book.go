@@ -39,6 +39,6 @@ func (g *ginServer) bookService() {
 		}
 		jpeg.Encode(ctx.Writer, image, nil)
 	})
-	g.app.POST("/book", httpHandler.CreateOneBook)
+	g.app.POST("/book", g.middleware.JwtAuthorization() ,httpHandler.CreateOneBook)
 	_ = grpcHandler
 }

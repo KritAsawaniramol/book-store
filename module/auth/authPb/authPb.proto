@@ -2,14 +2,15 @@
 syntax = "proto3";
 
 // Package name
-option go_package = "github.com/kritAsawaniramol/book-store";
+package userPb;
+option go_package = "github.com/kritAsawaniramol/module/auth/authPb";
 
 message AccessTokenSearchReq {
     string accessToken = 1;
 }
 
 message AccessTokenSearchRes {
-    string isValid = 1;
+    bool isValid = 1;
 }
 
 service AuthGrpcService {

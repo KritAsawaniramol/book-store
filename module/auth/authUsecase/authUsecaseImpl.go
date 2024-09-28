@@ -1,8 +1,11 @@
 package authUsecase
 
 import (
+	"errors"
+
 	"github.com/kritAsawaniramol/book-store/config"
 	"github.com/kritAsawaniramol/book-store/module/auth"
+	"github.com/kritAsawaniramol/book-store/module/auth/authPb"
 	"github.com/kritAsawaniramol/book-store/module/auth/authRepository"
 	"github.com/kritAsawaniramol/book-store/module/user/userPb"
 	"github.com/kritAsawaniramol/book-store/pkg/jwtAuth"
@@ -10,6 +13,17 @@ import (
 
 type authUsecaseImpl struct {
 	authRepository authRepository.AuthRepository
+}
+
+// AccessTokenSearch implements AuthUsecase.
+func (a *authUsecaseImpl) AccessTokenSearch(accessToken string) (*authPb.AccessTokenSearchRes, error) {
+	credential, err := a.authRepository.GetOneUserCredential(&auth.Credential{AccessToken: accessToken})
+	if err != nil {
+		return &authPb.AccessTokenSearchRes{IsValid: false}, err
+	} else if credential == nil {
+		return &authPb.AccessTokenSearchRes{IsValid: false}, errors.New("error: credential not found")
+	}
+	return &authPb.AccessTokenSearchRes{IsValid: true}, nil
 }
 
 // RefreshToken implements AuthUsecase.
