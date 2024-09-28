@@ -12,6 +12,7 @@ import (
 type (
 	MiddlewareHttpHandler interface {
 		JwtAuthorization() gin.HandlerFunc
+		RbacAuthorization(expectedRoleID map[uint]bool) gin.HandlerFunc
 	}
 
 	middlewareHttpHandlerImpl struct {
@@ -20,13 +21,27 @@ type (
 	}
 )
 
+// RbacAuthorization implements MiddlewareHttpHandler.
+func (m *middlewareHttpHandlerImpl) RbacAuthorization(expectedRoleID map[uint]bool) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		roleID := ctx.GetUint("roleID")
+		if err := m.middlewareUsecase.RbacAuthorization(roleID, expectedRoleID); err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+		ctx.Next()
+	}
+}
+
 // JwtAuthorization implements MiddlewareHttpHandler.
 func (m *middlewareHttpHandlerImpl) JwtAuthorization() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		accessToken := strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer ")
 		if accessToken == "" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": "Unauthorized access",
+				"message": "unauthorized access",
 			})
 			return
 		}

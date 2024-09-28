@@ -17,6 +17,7 @@ func (g *ginServer) bookService() {
 	usecase := bookUsecase.NewBookUsecaseImpl(repo)
 	httpHandler := bookHandler.NewBookHttpHandlerImpl(g.cfg, usecase)
 	grpcHandler := bookHandler.NewBookGrpcHandlerImpl(g.cfg, usecase)
+	_ = grpcHandler
 
 	// g.app.Static("/book/cover", "./asset/image/bookCover")
 	g.app.StaticFile("/book/file", "./asset/book")
@@ -39,6 +40,9 @@ func (g *ginServer) bookService() {
 		}
 		jpeg.Encode(ctx.Writer, image, nil)
 	})
-	g.app.POST("/book", g.middleware.JwtAuthorization() ,httpHandler.CreateOneBook)
-	_ = grpcHandler
+	g.app.POST("/book", g.middleware.JwtAuthorization(), g.middleware.RbacAuthorization(
+		map[uint]bool{
+			1: true,
+		},
+	), httpHandler.CreateOneBook)
 }
