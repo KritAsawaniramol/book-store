@@ -14,22 +14,31 @@ import (
 	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
 	"github.com/kritAsawaniramol/book-store/config"
+	"github.com/kritAsawaniramol/book-store/module/middleware/middlewareHandler"
+	"github.com/kritAsawaniramol/book-store/module/middleware/middlewareRepository"
+	"github.com/kritAsawaniramol/book-store/module/middleware/middlewareUsecase"
 	"gorm.io/gorm"
 )
 
 type ginServer struct {
-	app *gin.Engine
-	db  *gorm.DB
-	cfg *config.Config
-	// middleware middlewareHandler.MiddlewareHandlerService
+	app        *gin.Engine
+	db         *gorm.DB
+	cfg        *config.Config
+	middleware middlewareHandler.MiddlewareHttpHandler
+}
+
+func newMiddleware(cfg *config.Config, db *gorm.DB) middlewareHandler.MiddlewareHttpHandler {
+	repo := middlewareRepository.NewMiddlewareRepositoryImpl(db)
+	usecase := middlewareUsecase.NewMiddlewareUsecaseImpl(repo)
+	return middlewareHandler.NewMiddlewareHttpHandlerImpl(cfg, usecase)
 }
 
 func NewGinServer(cfg *config.Config, db *gorm.DB) Server {
 	return &ginServer{
-		app: gin.New(),
-		db:  db,
-		cfg: cfg,
-		// middleware: newMiddleware(cfg, db),
+		app:        gin.New(),
+		db:         db,
+		cfg:        cfg,
+		middleware: newMiddleware(cfg, db),
 	}
 }
 
