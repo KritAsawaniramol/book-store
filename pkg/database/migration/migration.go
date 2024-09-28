@@ -97,8 +97,8 @@ func shelfMigration(db database.Database) {
 func bookMigration(db database.Database) {
 	err := db.GetDb().AutoMigrate(
 		&book.Books{},
-		&book.Genres{},
-		&book.BooksGenres{},
+		&book.Tags{},
+		&book.BooksTags{},
 	)
 
 	if err != nil {

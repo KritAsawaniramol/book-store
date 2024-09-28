@@ -28,3 +28,6 @@ env/dev/.env.book
 env/dev/.env.payment
 env/dev/.env.shelf
 env/dev/.env.user
+
+asset/image/bookCover/*.*
+asset/book/*

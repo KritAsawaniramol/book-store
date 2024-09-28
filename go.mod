@@ -44,10 +44,12 @@ require (
 	github.com/gin-contrib/timeout v1.0.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
+	github.com/google/uuid v1.6.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	golang.org/x/text v0.17.0 // indirect
 	gorm.io/driver/postgres v1.5.9
 )
