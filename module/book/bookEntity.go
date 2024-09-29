@@ -10,19 +10,12 @@ type (
 		FilePath       string
 		CoverImagePath string
 		AuthorName     string
-		Tags           []BooksTags
-	}
-
-	BooksTags struct {
-		BooksID uint  `gorm:"primaryKey"`
-		Books   Books `gorm:"foreignKey:BooksID;references:ID"`
-		TagsID  uint  `gorm:"primaryKey"`
-		Tags    Tags  `gorm:"foreignKey:TagsID;references:ID"`
+		Tags           []Tags `gorm:"many2many:books_tags;"`
 	}
 
 	Tags struct {
 		gorm.Model
 		Name  string `gorm:"unique"`
-		Books []BooksTags
+		Books []Books  `gorm:"many2many:books_tags;"`
 	}
 )

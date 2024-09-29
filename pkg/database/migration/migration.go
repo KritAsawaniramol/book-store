@@ -98,7 +98,6 @@ func bookMigration(db database.Database) {
 	err := db.GetDb().AutoMigrate(
 		&book.Books{},
 		&book.Tags{},
-		&book.BooksTags{},
 	)
 
 	if err != nil {

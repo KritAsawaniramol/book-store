@@ -14,7 +14,7 @@ import (
 
 func (g *ginServer) bookService() {
 	repo := bookRepository.NewBookRepositoryImpl(g.db)
-	usecase := bookUsecase.NewBookUsecaseImpl(repo)
+	usecase := bookUsecase.NewBookUsecaseImpl(g.cfg, repo)
 	httpHandler := bookHandler.NewBookHttpHandlerImpl(g.cfg, usecase)
 	grpcHandler := bookHandler.NewBookGrpcHandlerImpl(g.cfg, usecase)
 	_ = grpcHandler
@@ -31,7 +31,6 @@ func (g *ginServer) bookService() {
 		}
 		defer file.Close()
 		ctx.Header("Content-type", "image")
-
 		image, err := jpeg.Decode(file)
 		if err != nil {
 			log.Printf("error: %s\n", err.Error())
@@ -40,6 +39,12 @@ func (g *ginServer) bookService() {
 		}
 		jpeg.Encode(ctx.Writer, image, nil)
 	})
+
+	g.app.GET("/book", httpHandler.SearchBooks)
+	g.app.GET("/book/:id", httpHandler.GetOneBook)
+
+	
+
 	g.app.POST("/book", g.middleware.JwtAuthorization(), g.middleware.RbacAuthorization(
 		map[uint]bool{
 			1: true,

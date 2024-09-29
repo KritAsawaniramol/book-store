@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kritAsawaniramol/book-store/config"
@@ -16,6 +17,8 @@ type (
 	BookHttpHandler interface {
 		CreateOneBook(ctx *gin.Context)
 		GetBookCover(ctx *gin.Context)
+		SearchBooks(ctx *gin.Context)
+		GetOneBook(ctx *gin.Context)
 	}
 
 	bookHttpHandlerImpl struct {
@@ -24,14 +27,56 @@ type (
 	}
 )
 
+// GetOneBook implements BookHttpHandler.
+func (b *bookHttpHandlerImpl) GetOneBook(ctx *gin.Context) {
+	bookIDStr := ctx.Param("id")
+	bookID, err := strconv.ParseUint(bookIDStr, 10, 64)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	res, err := b.bookUsecase.GetOneBook(uint(bookID))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, res)
+}
+
+// SearchBooks implements BookHttpHandler.
+func (b *bookHttpHandlerImpl) SearchBooks(ctx *gin.Context) {
+	wrapper := request.ContextWrapper(ctx)
+	req := &book.SearchBooksReq{}
+	if err := wrapper.Bind(req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	res, err := b.bookUsecase.SearchBooks(req)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, res)
+}
+
 // GetBookCover implements BookHttpHandler.
 func (b *bookHttpHandlerImpl) GetBookCover(ctx *gin.Context) {
-	panic("unimplemented")
+	bookIDStr := ctx.Param("id")
+	bookID, err := strconv.ParseUint(bookIDStr, 10, 64)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	res, err := b.bookUsecase.GetOneBook(uint(bookID))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, res)
 }
 
 // CreateOneBook implements BookHttpHandler.
 func (b *bookHttpHandlerImpl) CreateOneBook(ctx *gin.Context) {
-
 	wrapper := request.ContextWrapper(ctx)
 	req := &book.CreateBookReq{}
 	if err := wrapper.BindPostForm(req); err != nil {
