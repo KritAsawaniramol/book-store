@@ -13,6 +13,16 @@ type bookRepositoryImpl struct {
 	db *gorm.DB
 }
 
+// GetTags implements BookRepository.
+func (b *bookRepositoryImpl) GetTags(in *book.Tags) ([]book.Tags, error) {
+	tags := []book.Tags{}
+	if err := b.db.Where(in).Find(&tags).Error; err != nil {
+		log.Printf("error: GetTags: %s\n", err.Error())
+		return nil, errors.New("error: get tags failed")
+	}
+	return tags, nil
+}
+
 // GetOneBook implements BookRepository.
 func (b *bookRepositoryImpl) GetOneBook(in *book.Books) (*book.Books, error) {
 	if err := b.db.Preload("Tags").First(&in).Error; err != nil {

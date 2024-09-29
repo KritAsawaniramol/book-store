@@ -19,6 +19,7 @@ type (
 		GetBookCover(ctx *gin.Context)
 		SearchBooks(ctx *gin.Context)
 		GetOneBook(ctx *gin.Context)
+		GetTags(ctx *gin.Context)
 	}
 
 	bookHttpHandlerImpl struct {
@@ -26,6 +27,16 @@ type (
 		bookUsecase bookUsecase.BookUsecase
 	}
 )
+
+// GetTags implements BookHttpHandler.
+func (b *bookHttpHandlerImpl) GetTags(ctx *gin.Context) {
+	tags, err := b.bookUsecase.GetTags()
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, tags)
+}
 
 // GetOneBook implements BookHttpHandler.
 func (b *bookHttpHandlerImpl) GetOneBook(ctx *gin.Context) {

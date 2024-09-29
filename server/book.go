@@ -42,7 +42,7 @@ func (g *ginServer) bookService() {
 
 	g.app.GET("/book", httpHandler.SearchBooks)
 	g.app.GET("/book/:id", httpHandler.GetOneBook)
-
+	g.app.GET("/book/tags", httpHandler.GetTags)
 	
 
 	g.app.POST("/book", g.middleware.JwtAuthorization(), g.middleware.RbacAuthorization(

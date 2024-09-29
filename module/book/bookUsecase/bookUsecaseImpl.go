@@ -18,6 +18,23 @@ type bookUsecaseImpl struct {
 	cfg            *config.Config
 }
 
+// GetTags implements BookUsecase.
+func (b *bookUsecaseImpl) GetTags() ([]book.BookTags, error) {
+	tags, err := b.bookRepository.GetTags(&book.Tags{})
+	if err != nil {
+		return nil, err
+	}
+
+	res := []book.BookTags{}
+	for _, t := range tags {
+		res = append(res, book.BookTags{
+			ID:   t.ID,
+			Name: t.Name,
+		})
+	}
+	return res, nil
+}
+
 // GetOneBook implements BookUsecase.
 func (b *bookUsecaseImpl) GetOneBook(bookID uint) (*book.BookRes, error) {
 	condition := &book.Books{}
@@ -26,7 +43,7 @@ func (b *bookUsecaseImpl) GetOneBook(bookID uint) (*book.BookRes, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return b.convertBooksToBookRes(result), nil
 }
 

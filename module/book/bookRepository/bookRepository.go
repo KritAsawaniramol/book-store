@@ -14,4 +14,5 @@ type BookRepository interface {
 		conditions ...interface{},
 	) ([]book.Books, int64, error)
 	GetOneBook(in *book.Books) (*book.Books, error)
+	GetTags(in *book.Tags) ([]book.Tags, error)
 }
