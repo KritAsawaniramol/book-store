@@ -1,15 +1,13 @@
 package server
 
 import (
-	"image/jpeg"
 	"log"
-	"net/http"
-	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/kritAsawaniramol/book-store/module/book/bookHandler"
+	"github.com/kritAsawaniramol/book-store/module/book/bookPb"
 	"github.com/kritAsawaniramol/book-store/module/book/bookRepository"
 	"github.com/kritAsawaniramol/book-store/module/book/bookUsecase"
+	"github.com/kritAsawaniramol/book-store/pkg/grpccon"
 )
 
 func (g *ginServer) bookService() {
@@ -17,37 +15,26 @@ func (g *ginServer) bookService() {
 	usecase := bookUsecase.NewBookUsecaseImpl(g.cfg, repo)
 	httpHandler := bookHandler.NewBookHttpHandlerImpl(g.cfg, usecase)
 	grpcHandler := bookHandler.NewBookGrpcHandlerImpl(g.cfg, usecase)
-	_ = grpcHandler
+
+	go func() {
+		grpcServer, listener := grpccon.NewGrpcServer(g.cfg.Grpc.BookUrl)
+		bookPb.RegisterBookGrpcServiceServer(grpcServer, grpcHandler)
+		log.Printf("gRPC server listening on %s\n", g.cfg.Grpc.BookUrl)
+		grpcServer.Serve(listener)
+	}()
 
 	// g.app.Static("/book/cover", "./asset/image/bookCover")
 	g.app.StaticFile("/book/file", "./asset/book")
-	g.app.GET("/book/cover/:fileName", func(ctx *gin.Context) {
-		fileName := ctx.Param("fileName")
-		file, err := os.Open("./asset/image/bookCover/" + fileName)
-		if err != nil {
-			log.Printf("error: %s\n", err.Error())
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-			return
-		}
-		defer file.Close()
-		ctx.Header("Content-type", "image")
-		image, err := jpeg.Decode(file)
-		if err != nil {
-			log.Printf("error: %s\n", err.Error())
-			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-			return
-		}
-		jpeg.Encode(ctx.Writer, image, nil)
-	})
-
+	g.app.GET("/book/cover/:fileName", httpHandler.GetBookCoverImage)
 	g.app.GET("/book", httpHandler.SearchBooks)
 	g.app.GET("/book/:id", httpHandler.GetOneBook)
 	g.app.GET("/book/tags", httpHandler.GetTags)
-	
 
-	g.app.POST("/book", g.middleware.JwtAuthorization(), g.middleware.RbacAuthorization(
-		map[uint]bool{
-			1: true,
-		},
-	), httpHandler.CreateOneBook)
+	g.app.POST("/book",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+			map[uint]bool{
+				1: true,
+			},
+		), httpHandler.CreateOneBook)
 }

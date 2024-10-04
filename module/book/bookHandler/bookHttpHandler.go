@@ -1,10 +1,16 @@
 package bookHandler
 
 import (
+	"errors"
+	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kritAsawaniramol/book-store/config"
@@ -20,6 +26,7 @@ type (
 		SearchBooks(ctx *gin.Context)
 		GetOneBook(ctx *gin.Context)
 		GetTags(ctx *gin.Context)
+		GetBookCoverImage(ctx *gin.Context)
 	}
 
 	bookHttpHandlerImpl struct {
@@ -27,6 +34,56 @@ type (
 		bookUsecase bookUsecase.BookUsecase
 	}
 )
+
+// GetBookCoverImage implements BookHttpHandler.
+func (b *bookHttpHandlerImpl) GetBookCoverImage(ctx *gin.Context) {
+	fileName := ctx.Param("fileName")
+	file, err := os.Open("./asset/image/bookCover/" + fileName)
+	if err != nil {
+		log.Printf("error: %s\n", err.Error())
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	defer file.Close()
+
+	img, format, err := image.Decode(file)
+	if err != nil {
+		log.Printf("error: %s\n", err.Error())
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	// i, err := jpeg.Decode(file)
+	// if err != nil {
+	// 	log.Printf("error: GetBookCoverImage: %s\n", err.Error())
+	// 	ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	// 	return
+	// }
+
+	// jpeg.Encode(ctx.Writer, img, nil)
+	if err := serveImage(img, format, ctx); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+}
+
+func serveImage(img image.Image, format string, ctx *gin.Context) error {
+	format = strings.ToLower(format)
+	ctx.Header("Content-type", fmt.Sprintf("image/%s", format))
+	var err error = nil
+	switch format {
+	case "jpeg", "jpg":
+		err = jpeg.Encode(ctx.Writer, img, nil)
+	case "png":
+		err = png.Encode(ctx.Writer, img)
+	default:
+		err = errors.New("error: upsupported image format")
+	}
+	if err != nil {
+		log.Printf("error: serveImage: %s\n", err.Error())
+		return err
+	}
+	return nil
+}
 
 // GetTags implements BookHttpHandler.
 func (b *bookHttpHandlerImpl) GetTags(ctx *gin.Context) {

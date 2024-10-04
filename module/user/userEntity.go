@@ -8,7 +8,6 @@ type (
 		Username         string `gorm:"unique;not null"`
 		Password         string `gorm:"not null"`
 		RoleID           uint   `gorm:"not null"`
-		Coin             int64  `gorm:"not null"`
 		UserTransactions []UserTransactions
 	}
 

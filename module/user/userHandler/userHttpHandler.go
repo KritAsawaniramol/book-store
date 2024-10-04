@@ -11,10 +11,38 @@ import (
 
 type UserHttpHandler interface {
 	Register(ctx *gin.Context)
+	AddUserMoney(ctx *gin.Context)
+	GetUserBalance(ctx *gin.Context)
 }
 
 type userHttpHandlerImpl struct {
 	userUsecase userUsecase.UserUsecase
+}
+
+// GetUserBalance implements UserHttpHandler.
+func (u *userHttpHandlerImpl) GetUserBalance(ctx *gin.Context) {
+	balance, err := u.userUsecase.GetUserBalance(ctx.GetUint("userID"))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, balance)
+}
+
+// AddUserMoney implements UserHttpHandler.
+func (u *userHttpHandlerImpl) AddUserMoney(ctx *gin.Context) {
+	wrapper := request.ContextWrapper(ctx)
+	req := &user.CreateUserTransactionReq{}
+	if err := wrapper.Bind(req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	balance, err := u.userUsecase.CreateUserTransaction(req)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, balance)
 }
 
 // register implements UserHttpHandler.

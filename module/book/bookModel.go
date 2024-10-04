@@ -17,7 +17,7 @@ type (
 	}
 
 	BookTags struct {
-		ID   uint   `json:"id" `
+		ID   uint   `json:"id"`
 		Name string `json:"name"`
 	}
 

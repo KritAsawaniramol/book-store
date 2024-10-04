@@ -13,6 +13,11 @@ type userQueueHandlerImpl struct {
 	cfg         *config.Config
 }
 
-func NewUserQueueHandler(userUsecase userUsecase.UserUsecase, cfg *config.Config) UserQueueHandler {
-	return &userQueueHandlerImpl{userUsecase: userUsecase, cfg: cfg}
-}
+// func (u *userQueueHandlerImpl) UserConsumer() {
+// 	consumer, err := queue.ConnectConsumer([]string{u.cfg.Kafka.Url}, u.cfg.Kafka.GroupID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	consumer.Consume()
+// }

@@ -1,6 +1,7 @@
 package middlewareHandler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -23,6 +24,7 @@ type (
 
 // RbacAuthorization implements MiddlewareHttpHandler.
 func (m *middlewareHttpHandlerImpl) RbacAuthorization(expectedRoleID map[uint]bool) gin.HandlerFunc {
+	fmt.Println("Call RbacAuthorization")
 	return func(ctx *gin.Context) {
 		roleID := ctx.GetUint("roleID")
 		if err := m.middlewareUsecase.RbacAuthorization(roleID, expectedRoleID); err != nil {
@@ -37,6 +39,7 @@ func (m *middlewareHttpHandlerImpl) RbacAuthorization(expectedRoleID map[uint]bo
 
 // JwtAuthorization implements MiddlewareHttpHandler.
 func (m *middlewareHttpHandlerImpl) JwtAuthorization() gin.HandlerFunc {
+	fmt.Println("Call JwtAuthorization()")
 	return func(ctx *gin.Context) {
 		accessToken := strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer ")
 		if accessToken == "" {

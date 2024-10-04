@@ -25,7 +25,7 @@ go.work.sum
 .env
 env/dev/.env.auth
 env/dev/.env.book
-env/dev/.env.payment
+env/dev/.env.order
 env/dev/.env.shelf
 env/dev/.env.user
 

@@ -47,9 +47,10 @@ type (
 	}
 
 	Kafka struct {
-		Url    string
-		ApiKey string
-		Secret string
+		Url     string
+		GroupID string
+		ApiKey  string
+		Secret  string
 	}
 
 	Grpc struct {
@@ -57,7 +58,7 @@ type (
 		UserUrl    string
 		ShelfUrl   string
 		BookUrl    string
-		PaymentUrl string
+		OrderUrl string
 	}
 
 	Jwt struct {
@@ -98,7 +99,7 @@ func LoadConfig(path string) *Config {
 		defer lock.Unlock()
 		if config == nil {
 			if err := godotenv.Load(path); err != nil {
-				
+
 				log.Fatalf("Error loading .env file: %s", err.Error())
 			}
 			appPort, err := strconv.Atoi(os.Getenv("APP_PORT"))
@@ -154,16 +155,17 @@ func LoadConfig(path string) *Config {
 				},
 
 				Kafka: Kafka{
-					Url:    os.Getenv("KAFKA_URL"),
-					ApiKey: os.Getenv("KAFKA_API_KEY"),
-					Secret: os.Getenv("KAFKA_SECRET"),
+					Url:     os.Getenv("KAFKA_URL"),
+					GroupID: os.Getenv("KAFKA_GROUP_ID"),
+					ApiKey:  os.Getenv("KAFKA_API_KEY"),
+					Secret:  os.Getenv("KAFKA_SECRET"),
 				},
 				Grpc: Grpc{
 					AuthUrl:    os.Getenv("GRPC_AUTH_URL"),
 					UserUrl:    os.Getenv("GRPC_USER_URL"),
 					ShelfUrl:   os.Getenv("GRPC_SHELF_URL"),
 					BookUrl:    os.Getenv("GRPC_BOOK_URL"),
-					PaymentUrl: os.Getenv("GRPC_PAYMENT_URL"),
+					OrderUrl: os.Getenv("GRPC_ORDER_URL"),
 				},
 
 				Jwt: Jwt{

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/kritAsawaniramol/book-store/module/book"
 	"gorm.io/gorm"
@@ -11,6 +12,19 @@ import (
 
 type bookRepositoryImpl struct {
 	db *gorm.DB
+}
+
+// GetBooksInIDs implements BookRepository.
+func (b *bookRepositoryImpl) GetBooksInIDs(ids []uint) ([]book.Books, int64, error) {
+	books := []book.Books{}
+	result := b.db.Where(ids).Find(&books)
+	if result.Error != nil {
+		log.Printf("error: GetBooksInIDs: %s\n", result.Error.Error())
+		return nil, 0, errors.New("error: get books failed")
+	}
+	var count int64
+	result.Count(&count)
+	return books, count, nil
 }
 
 // GetTags implements BookRepository.
@@ -32,16 +46,46 @@ func (b *bookRepositoryImpl) GetOneBook(in *book.Books) (*book.Books, error) {
 	return in, nil
 }
 
-// GetBooks implements BookRepository.
-func (b *bookRepositoryImpl) GetBooks(
+// SearchBook implements BookRepository.
+func (b *bookRepositoryImpl) SearchBook(
 	limit int,
-	order interface{},
-	offest uint,
-	tagIDs []uint,
-	conditions ...interface{},
+	order string,
+	offest int,
+	title string,
+	maxPrice *uint,
+	minPrice *uint,
+	authorName string,
+	tagIDs []*uint,
 ) ([]book.Books, int64, error) {
+	conditions := []string{}
+	conditionsValue := []interface{}{}
+	if title != "" {
+		conditions = append(conditions, "title LIKE ?")
+		conditionsValue = append(conditionsValue, fmt.Sprintf("%s%%", title))
+	}
+
+	if maxPrice != nil {
+		conditions = append(conditions, "price <= ?")
+		conditionsValue = append(conditionsValue, *maxPrice)
+	}
+
+	if minPrice != nil {
+		conditions = append(conditions, "price >= ?")
+		conditionsValue = append(conditionsValue, *minPrice)
+	}
+
+	if authorName != "" {
+		conditions = append(conditions, "author_name LIKE ?")
+		conditionsValue = append(conditionsValue, fmt.Sprintf("%s%%", authorName))
+	}
+	conditionsStr := strings.Join(conditions, " AND ")
+	conds := make([]interface{}, 0)
+	conds = append(conds, conditionsStr)
+	conds = append(conds, conditionsValue...)
+
 	books := []book.Books{}
 	var count int64
+
 	tx := b.db.Model(&book.Books{})
 	for i, tagID := range tagIDs {
 		alias := fmt.Sprintf("bt%d", i)
@@ -50,24 +94,21 @@ func (b *bookRepositoryImpl) GetBooks(
 				alias, alias, alias, tagID),
 		)
 	}
-	result := tx.Order(order).Offset(int(offest)).Limit(int(limit)).Preload("Tags").Find(&books, conditions...)
 
+	result := tx.
+		Order(order).
+		Offset(int(offest)).
+		Limit(int(limit)).
+		Preload("Tags").
+		// Find(&books, c...)
+		Find(&books, conds...)
 	if result.Error != nil {
 		log.Printf("error: GetBooks: %s\n", result.Error.Error())
 		return books, 0, errors.New("error: get books failed")
 	}
-
 	result.Count(&count)
 	fmt.Printf("count: %v\n", count)
 	return books, count, nil
-}
-
-func (b *bookRepositoryImpl) Test() {
-	books := []book.Books{}
-	b.db.
-		Joins("JOIN books_tags bt ON bt.book_id = books.id").
-		Where("bt.tag_id IN ?", []uint{1, 3}).
-		Find(books)
 }
 
 // DeleteTags implements BookRepository.

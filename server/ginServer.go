@@ -78,8 +78,8 @@ func (g *ginServer) Start() {
 		g.shelfService()
 	case "book":
 		g.bookService()
-	case "payment":
-		g.paymentServer()
+	case "order":
+		g.orderServer()
 	}
 
 	// g.authService()

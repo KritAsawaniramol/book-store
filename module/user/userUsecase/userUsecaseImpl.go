@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/kritAsawaniramol/book-store/config"
 	"github.com/kritAsawaniramol/book-store/module/user"
 	"github.com/kritAsawaniramol/book-store/module/user/userPb"
 	"github.com/kritAsawaniramol/book-store/module/user/userRepository"
@@ -13,6 +14,83 @@ import (
 
 type userUsecaseImpl struct {
 	userRepository userRepository.UserRepository
+}
+
+// BuyBook implements UserUsecase.
+func (u *userUsecaseImpl) BuyBook(cfg *config.Config, req *user.BuyBookReq) {
+	res := &user.BuyBookRes{
+		OrderID: req.OrderID,
+		UserID:  req.UserID,
+		Total:   req.Total,
+		BookIDs: req.BookIDs,
+		Error:   "",
+	}
+
+	userBalance, err := u.GetUserBalance(req.UserID)
+	if err != nil {
+		log.Println("case #1")
+		res.Error = err.Error()
+		u.userRepository.BuyBookRes(res, cfg)
+		return
+	}
+
+	if userBalance.Balance < int64(req.Total) {
+		log.Printf("case #2 %v < %v", userBalance.Balance, int64(req.Total))
+		res.Error = "error: not enough coin"
+		u.userRepository.BuyBookRes(res, cfg)
+		return
+	}
+
+	userTransaction := &user.UserTransactions{
+		UserID: req.UserID,
+		Amount: -int64(req.Total),
+	}
+	if err := u.userRepository.CreateUserTransaction(userTransaction); err != nil {
+		log.Println("case #3")
+		res.Error = err.Error()
+		u.userRepository.BuyBookRes(res, cfg)
+		return
+	}
+	res.TransactionID = userTransaction.ID
+	u.userRepository.BuyBookRes(res, cfg)
+}
+
+// RollbackUserTransaction implements UserUsecase.
+func (u *userUsecaseImpl) RollbackUserTransaction(req *user.RollbackUserTransactionReq) {
+	u.userRepository.DeleteUserTransaction(req.TransactionID)
+}
+
+// CreateUserTransaction implements UserUsecase.
+func (u *userUsecaseImpl) CreateUserTransaction(req *user.CreateUserTransactionReq) (*user.CreateUserTransactionRes, error) {
+	transactionEntity := &user.UserTransactions{
+		UserID: req.UserID,
+		Amount: req.Amount,
+	}
+	if err := u.userRepository.CreateUserTransaction(transactionEntity); err != nil {
+		return nil, err
+	}
+	balance, err := u.GetUserBalance(req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return &user.CreateUserTransactionRes{
+		TransactionID: transactionEntity.ID,
+		Balance:       balance.Balance,
+	}, nil
+}
+
+func (u *userUsecaseImpl) GetUserBalance(userID uint) (*user.UserBalanceRes, error) {
+	transactions, err := u.userRepository.GetUserTransactions(&user.UserTransactions{
+		UserID: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	var coin int64 = 0
+	for _, t := range transactions {
+		coin += t.Amount
+	}
+	return &user.UserBalanceRes{Balance: coin}, nil
 }
 
 // FindOneUserByID implements UserUsecase.
@@ -27,7 +105,6 @@ func (u *userUsecaseImpl) FindOneUserByID(userID uint) (*userPb.UserProfile, err
 		Id:        uint64(user.ID),
 		Username:  user.Username,
 		RoleId:    uint32(user.RoleID),
-		Coin:      user.Coin,
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}, nil
@@ -46,10 +123,10 @@ func (u *userUsecaseImpl) FindOneUserByUsernameAndPassword(username string, pass
 		return nil, errors.New("error: password is incorrect")
 	}
 	return &userPb.UserProfile{
-		Id:        uint64(user.ID),
-		Username:  user.Username,
-		RoleId:    uint32(user.RoleID),
-		Coin:      user.Coin,
+		Id:       uint64(user.ID),
+		Username: user.Username,
+		RoleId:   uint32(user.RoleID),
+		// Coin:      user.Coin,
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}, nil
@@ -67,7 +144,7 @@ func (u *userUsecaseImpl) Register(registReq *user.UserRegisterReq) (uint, error
 		Username: registReq.Username,
 		Password: string(hashedPassword),
 		RoleID:   2,
-		Coin:     0,
+		// Coin:     0,
 	})
 	if err != nil {
 		return 0, err

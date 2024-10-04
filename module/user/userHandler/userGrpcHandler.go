@@ -18,7 +18,7 @@ func (u *userGrpcHandler) FindOneUserProfileToRefresh(ctx context.Context, req *
 }
 
 // FindUserProfileToLogin implements userPb.UserGrpcServiceServer.
-func (u *userGrpcHandler) FindUserProfileToLogin(ctx context.Context,req *userPb.FindUserProfileToLoginReq) (*userPb.UserProfile, error) {
+func (u *userGrpcHandler) FindUserProfileToLogin(ctx context.Context, req *userPb.FindUserProfileToLoginReq) (*userPb.UserProfile, error) {
 	return u.userUsecase.FindOneUserByUsernameAndPassword(req.Username, req.Password)
 }
 

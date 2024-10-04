@@ -6,13 +6,17 @@ type BookRepository interface {
 	CreateOneBook(in *book.Books) error
 	CreateTags(in []book.Tags) error
 	DeleteTags(in []book.Tags) error
-	GetBooks(
+	SearchBook(
 		limit int,
-		order interface{},
-		offest uint,
-		tagIDs []uint,
-		conditions ...interface{},
+		order string,
+		offest int,
+		title string,
+		maxPrice *uint,
+		minPrice *uint,
+		authorName string,
+		tagIDs []*uint,
 	) ([]book.Books, int64, error)
+	GetBooksInIDs(ids []uint) ([]book.Books, int64, error)
 	GetOneBook(in *book.Books) (*book.Books, error)
 	GetTags(in *book.Tags) ([]book.Tags, error)
 }

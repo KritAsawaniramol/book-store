@@ -9,13 +9,48 @@ import (
 	"github.com/kritAsawaniramol/book-store/config"
 	"github.com/kritAsawaniramol/book-store/models"
 	"github.com/kritAsawaniramol/book-store/module/book"
+	"github.com/kritAsawaniramol/book-store/module/book/bookPb"
 	"github.com/kritAsawaniramol/book-store/module/book/bookRepository"
-	"github.com/kritAsawaniramol/book-store/util"
 )
 
 type bookUsecaseImpl struct {
 	bookRepository bookRepository.BookRepository
 	cfg            *config.Config
+}
+
+// FindBookInIDs implements BookUsecase.
+func (b *bookUsecaseImpl) FindBookInIDs(req *bookPb.FindBooksInIdsReq) (*bookPb.FindBooksInIdsRes, error) {
+	ids := []uint{}
+	for _, id := range req.Ids {
+		ids = append(ids, uint(id))
+	}
+
+	books, _, err := b.bookRepository.GetBooksInIDs(ids)
+	if err != nil {
+		return nil, err
+	}
+	bookRes := []*bookPb.Book{}
+	for _, v := range books {
+		tags := []*bookPb.Tags{}
+		for _, tag := range v.Tags {
+			tags = append(tags, &bookPb.Tags{
+				Id:   uint64(tag.ID),
+				Name: tag.Name,
+			})
+		}
+		bookRes = append(bookRes, &bookPb.Book{
+			Id:             uint64(v.ID),
+			Title:          v.Title,
+			Price:          uint64(v.Price),
+			FilePath:       v.FilePath,
+			CoverImagePath: v.CoverImagePath,
+			AuthorName:     v.AuthorName,
+			Tags:           tags,
+		})
+	}
+	return &bookPb.FindBooksInIdsRes{
+		Book: bookRes,
+	}, nil
 }
 
 // GetTags implements BookUsecase.
@@ -64,37 +99,7 @@ func (b *bookUsecaseImpl) SearchBooks(req *book.SearchBooksReq) (*book.SearchBoo
 		req.MinPrice = &min
 	}
 
-	// if req.MaxPrice == nil {
-	// 	var max uint = 0
-	// 	req.MaxPrice = &max
-	// }
-
-	offset := (*req.Page - 1) * uint(*req.Limit)
-
-	conditions := []string{}
-	conditionsValue := []interface{}{}
-
-	if req.Title != "" {
-		conditions = append(conditions, "title LIKE ?")
-		conditionsValue = append(conditionsValue, fmt.Sprintf("%s%%", req.Title))
-	}
-
-	if req.MaxPrice != nil {
-		conditions = append(conditions, "price <= ?")
-		conditionsValue = append(conditionsValue, *req.MaxPrice)
-	}
-
-	if req.MinPrice != nil {
-		conditions = append(conditions, "price >= ?")
-		conditionsValue = append(conditionsValue, *req.MinPrice)
-	}
-
-	if req.AuthorName != "" {
-		conditions = append(conditions, "author_name LIKE ?")
-		conditionsValue = append(conditionsValue, fmt.Sprintf("%s%%", req.AuthorName))
-	}
-
-	tags := []uint{}
+	tags := []*uint{}
 	if req.TagIDs != "" {
 		tagIDs := strings.Split(req.TagIDs, ",")
 		for _, v := range tagIDs {
@@ -102,22 +107,23 @@ func (b *bookUsecaseImpl) SearchBooks(req *book.SearchBooksReq) (*book.SearchBoo
 			if err != nil {
 				return nil, err
 			}
-			tags = append(tags, uint(tID))
+			tIDUint := uint(tID)
+			tIDPointer := &tIDUint
+			tags = append(tags, tIDPointer)
 		}
 	}
-	fmt.Printf("tags: %v\n", tags)
-	conditionsStr := strings.Join(conditions, " AND ")
+	offset := (int(*req.Page) - 1) * *req.Limit
 
-	fmt.Printf("conditionsStr: %v\n", conditionsStr)
-	fmt.Printf("conditionsValue: %v\n", conditionsValue)
-	c := make([]interface{}, 0)
-	c = append(c, conditionsStr)
-	c = append(c, conditionsValue...)
-
-	for _, v := range c {
-		fmt.Println(v)
-	}
-	books, count, err := b.bookRepository.GetBooks(*req.Limit, "created_at ASC", offset, tags, c...)
+	books, count, err := b.bookRepository.SearchBook(
+		*req.Limit,
+		"created_at ASC",
+		offset,
+		req.Title,
+		req.MaxPrice,
+		req.MinPrice,
+		req.AuthorName,
+		tags,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +150,6 @@ func (b *bookUsecaseImpl) SearchBooks(req *book.SearchBooksReq) (*book.SearchBoo
 
 // CreateOneBook implements BookUsecase.
 func (b *bookUsecaseImpl) CreateOneBook(req *book.CreateBookReq) (uint, error) {
-	util.PrintObjInJson(req)
 	newTags := []book.Tags{}
 	notExistsTagIndex := []int{}
 	for idx, v := range req.Tags {
@@ -165,7 +170,6 @@ func (b *bookUsecaseImpl) CreateOneBook(req *book.CreateBookReq) (uint, error) {
 			m[v.Name] = v.ID
 		}
 	}
-	util.PrintObjInJson(newTags)
 
 	for _, v := range notExistsTagIndex {
 		req.Tags[v].ID = m[req.Tags[v].Name]
