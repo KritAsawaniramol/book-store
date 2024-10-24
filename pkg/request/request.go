@@ -49,6 +49,8 @@ func resizeImage(file *multipart.FileHeader) (image.Image, string, error) {
 }
 
 func (c *contextWrapper) SaveImageFormFile(name string, dst string) (string, error) {
+	
+	
 	file, err := c.Context.FormFile(name)
 	if err != nil {
 		log.Printf("error: SaveImageFormFile: %s\n", err.Error())
@@ -62,6 +64,7 @@ func (c *contextWrapper) SaveImageFormFile(name string, dst string) (string, err
 	if err != nil {
 		return "", err
 	}
+
 	imageName := uuid.New().String()
 	imagePath := fmt.Sprintf("%s/%s.%s", dst, imageName, format)
 
@@ -75,6 +78,8 @@ func (c *contextWrapper) SaveImageFormFile(name string, dst string) (string, err
 		return "", errors.New("error: save image failed")
 	}
 	defer out.Close()
+
+
 
 	switch strings.ToLower(format) {
 	case "jpeg", "jpg":
@@ -104,6 +109,7 @@ func (c *contextWrapper) SavePdfFormFile(name string, dst string) (string, error
 	}
 
 	bookFilePath := fmt.Sprintf("%s/%s.pdf", dst, uuid.New().String())
+
 	if err := c.Context.SaveUploadedFile(file, bookFilePath); err != nil {
 		log.Printf("error: SavePdfFormFile: %s\n", err.Error())
 		return "", errors.New("error: save .pdf file failed")
@@ -129,6 +135,7 @@ func (c *contextWrapper) Bind(data any) error {
 
 func (c *contextWrapper) BindPostForm(data any) error {
 	jsonString := c.Context.PostForm("json")
+	fmt.Printf("jsonString: %v\n", jsonString)
 
 	err := json.Unmarshal([]byte(jsonString), data)
 	if err != nil {

@@ -7,8 +7,12 @@ import (
 
 type BookUsecase interface {
 	CreateOneBook(req *book.CreateBookReq) (uint, error)
-	SearchBooks(req *book.SearchBooksReq) (*book.SearchBooksRes, error)
+	SearchBooks(req *book.SearchBooksReq, roleID uint) (*book.SearchBooksRes, error)
 	FindBookInIDs(req *bookPb.FindBooksInIdsReq) (*bookPb.FindBooksInIdsRes, error)
-	GetOneBook(bookID uint) (*book.BookRes, error)
+	GetOneBook(bookID uint, roleID uint) (*book.BookRes, error)
+	GetOneBookFilePath(bookID uint) (string, error)
+	UpdateOneBookDetail(req *book.UpdateBookDetailReq) error
 	GetTags() ([]book.BookTags, error)
+	UpdateOneBookCover(bookID uint, newImagePath string) error
+	UpdateOneBookFile(bookID uint, newFilePath string) error
 }

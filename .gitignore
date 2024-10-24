@@ -23,11 +23,8 @@ go.work.sum
 
 # env file
 .env
-env/dev/.env.auth
-env/dev/.env.book
-env/dev/.env.order
-env/dev/.env.shelf
-env/dev/.env.user
+env/prod/*
 
 asset/image/bookCover/*.*
 asset/book/*
+build

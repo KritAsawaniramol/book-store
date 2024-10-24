@@ -5,8 +5,10 @@ import (
 	"log"
 
 	"github.com/kritAsawaniramol/book-store/module/shelf/shelfHandler"
+	"github.com/kritAsawaniramol/book-store/module/shelf/shelfPb"
 	"github.com/kritAsawaniramol/book-store/module/shelf/shelfRepository"
 	"github.com/kritAsawaniramol/book-store/module/shelf/shelfUsecase"
+	"github.com/kritAsawaniramol/book-store/pkg/grpccon"
 	"github.com/kritAsawaniramol/book-store/pkg/queue"
 )
 
@@ -15,10 +17,19 @@ func (g *ginServer) shelfService() {
 	usecase := shelfUsecase.NewShelfUsecaseImpl(repo)
 	httpHandler := shelfHandler.NewShelfHttpHandlerImpl(g.cfg, usecase)
 	queueHandler := shelfHandler.NewShelfQueueHandlerImpl(g.cfg, usecase)
-	queueConn, err := queue.ConnectConsumer([]string{g.cfg.Kafka.Url}, g.cfg.Kafka.GroupID)
+	grpcHandler := shelfHandler.NewShelfGrpcHandlerImpl(g.cfg, usecase)
+
+	queueConn, err := queue.ConnectConsumer([]string{g.cfg.Kafka.Url}, g.cfg.Kafka.ApiKey, g.cfg.Kafka.Secret,g.cfg.Kafka.GroupID)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	go func() {
+		grpcServer, listener := grpccon.NewGrpcServer(g.cfg.Grpc.ShelfUrl)
+		shelfPb.RegisterShelfGrpcServiceServer(grpcServer, grpcHandler)
+		log.Printf("gRPC server listening on %s\n", g.cfg.Grpc.ShelfUrl)
+		grpcServer.Serve(listener)
+	}()
 
 	consumerHandeler := shelfHandler.NewShelfConsumerHandler(usecase, g.cfg)
 	go func() {
@@ -29,11 +40,11 @@ func (g *ginServer) shelfService() {
 		}
 	}()
 
-	// go func() {
-	// 	err := <-queueConn.Errors()
-	// 	log.Printf("error: queueConn: %s\n", err.Error())
-	// }()
+	shelf := g.app.Group("/shelf_v1")
+	
+	
+	shelf.GET("", g.healthCheck)
+	shelf.GET("/shelf", g.middleware.JwtAuthorization(), httpHandler.GetMyShelf)
 
-	_ = httpHandler
 	_ = queueHandler
 }

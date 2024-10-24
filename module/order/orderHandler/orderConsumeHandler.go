@@ -34,7 +34,7 @@ func (o *orderConsumerHandler) ConsumeClaim(session sarama.ConsumerGroupSession,
 				log.Printf("error: ConsumeClaim: %s\n", err.Error())
 				continue
 			}
-			// o.orderUsecase.HandleBuyBooksRes(o.cfg, res)
+			o.orderUsecase.HandleAddBookRes(o.cfg, res)
 		default:
 			log.Println("no consumer handler")
 		}

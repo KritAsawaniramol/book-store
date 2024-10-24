@@ -24,7 +24,10 @@ func (g *ginServer) authService() {
 		grpcServer.Serve(listener)
 	}()
 
-	g.app.POST("/auth/login", httpHandler.Login)
-	g.app.POST("/auth/logout", httpHandler.Logout)
-	g.app.POST("/auth/refresh-token", httpHandler.RefreshToken)
+	auth := g.app.Group("/auth_v1")
+
+	auth.GET("", g.healthCheck)
+	auth.POST("/auth/login", httpHandler.Login)
+	auth.POST("/auth/logout", httpHandler.Logout)
+	auth.POST("/auth/refresh-token", httpHandler.RefreshToken)
 }

@@ -7,12 +7,37 @@ import (
 	"time"
 
 	"github.com/kritAsawaniramol/book-store/module/auth/authPb"
+	"github.com/kritAsawaniramol/book-store/module/shelf/shelfPb"
 	"github.com/kritAsawaniramol/book-store/pkg/grpccon"
 	"gorm.io/gorm"
 )
 
 type middlewareRepositoryImpl struct {
 	db *gorm.DB
+}
+
+// BookShelfSearch implements MiddlewareRepository.
+func (m *middlewareRepositoryImpl) BookShelfSearch(grpcUrl string, userID uint, bookID uint) error {
+	conn, err := grpccon.NewGrpcClient(grpcUrl)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	searchUserShelfRes, err := conn.Shelf().SearchUserShelf(ctx, &shelfPb.SearchUserShelfReq{
+		UserId: uint64(userID),
+		BookId: uint64(bookID),
+	})
+	if err != nil {
+		log.Printf("error: BookShelfSearch: %s\n", err.Error())
+		return errors.New("error: failed to search your book in your shelf")
+	}
+
+	if searchUserShelfRes.IsValid == false {
+		return errors.New("error: you don't have permission to read this book")
+	}
+	return nil
 }
 
 // AccessTokenSearch implements MiddlewareRepository.

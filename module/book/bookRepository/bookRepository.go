@@ -14,9 +14,12 @@ type BookRepository interface {
 		maxPrice *uint,
 		minPrice *uint,
 		authorName string,
+		isAvailableInStore *bool,
 		tagIDs []*uint,
 	) ([]book.Books, int64, error)
 	GetBooksInIDs(ids []uint) ([]book.Books, int64, error)
 	GetOneBook(in *book.Books) (*book.Books, error)
 	GetTags(in *book.Tags) ([]book.Tags, error)
+	UpdateOneBookDetail(bookID uint,in *book.Books) error
+	UpdateNonZeroBookFields(bookID uint, in *book.Books) error 
 }

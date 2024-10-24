@@ -3,6 +3,7 @@ package middlewareHandler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ type (
 	MiddlewareHttpHandler interface {
 		JwtAuthorization() gin.HandlerFunc
 		RbacAuthorization(expectedRoleID map[uint]bool) gin.HandlerFunc
+		BookOwnershipAuthorization() gin.HandlerFunc
 	}
 
 	middlewareHttpHandlerImpl struct {
@@ -21,6 +23,32 @@ type (
 		middlewareUsecase middlewareUsecase.MiddlewareUsecase
 	}
 )
+
+// OwnershipAuthorization implements MiddlewareHttpHandler.
+func (m *middlewareHttpHandlerImpl) BookOwnershipAuthorization() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userID := ctx.GetUint("userID")
+		bookIDStr := ctx.Param("bookID")
+		roleID := ctx.GetUint("roleID")
+
+		if bookIDStr == "" {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": "bookID is required"})
+			return
+		}
+		bookIDUint64, err := strconv.ParseUint(bookIDStr, 10, 64)
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			return
+		}
+		bookID := uint(bookIDUint64)
+		if err := m.middlewareUsecase.BookOwnershipAuthorization(m.cfg, roleID, userID, bookID); err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+			return
+		}
+		ctx.Set("bookID", bookID)
+		ctx.Next()
+	}
+}
 
 // RbacAuthorization implements MiddlewareHttpHandler.
 func (m *middlewareHttpHandlerImpl) RbacAuthorization(expectedRoleID map[uint]bool) gin.HandlerFunc {
@@ -39,7 +67,8 @@ func (m *middlewareHttpHandlerImpl) RbacAuthorization(expectedRoleID map[uint]bo
 
 // JwtAuthorization implements MiddlewareHttpHandler.
 func (m *middlewareHttpHandlerImpl) JwtAuthorization() gin.HandlerFunc {
-	fmt.Println("Call JwtAuthorization()")
+	fmt.Println("Call JwtAuthorization")
+
 	return func(ctx *gin.Context) {
 		accessToken := strings.TrimPrefix(ctx.GetHeader("Authorization"), "Bearer ")
 		if accessToken == "" {

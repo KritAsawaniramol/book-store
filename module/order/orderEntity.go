@@ -9,15 +9,16 @@ type (
 		gorm.Model
 		UserID uint
 		Status string
-		Books  []OrderBook
+		OrdersBooks  []OrdersBooks
 		Note   string
 		Total  uint
 	}
 
-	OrderBook struct {
+	OrdersBooks struct {
 		gorm.Model
 		OrdersID uint
 		BookID   uint
+		//Price when book was buyed
 		Price    uint
 	}
 )

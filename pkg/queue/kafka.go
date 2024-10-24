@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"log"
@@ -9,10 +10,28 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func ConnectProducer(brokerUrls []string) (sarama.SyncProducer, error) {
+func ConnectProducer(brokerUrls []string, apiKey, secret string) (sarama.SyncProducer, error) {
 	config := sarama.NewConfig()
 
+	// apiKey and secret only use in production on confluent (didn't use in docker)
+	if apiKey != "" && secret != "" {
+		config.Net.SASL.Enable = true
+		config.Net.SASL.User = apiKey
+		config.Net.SASL.Password = secret
+		config.Net.SASL.Mechanism = "PLAIN"
+		config.Net.SASL.Handshake = true
+		config.Net.SASL.Version = sarama.SASLHandshakeV1
+
+		// connect with broker that use HTTPS e.g. confluent (default kafka use tcp)
+		config.Net.TLS.Enable = true
+		config.Net.TLS.Config = &tls.Config{
+			InsecureSkipVerify: true,
+			ClientAuth:         tls.NoClientCert,
+		}
+	}
+
 	config.Producer.Return.Successes = true
+
 	// config.Producer.RequiredAcks
 	// This setting determines how many acknowledgments the producer needs to
 	// receive from Kafka brokers before considering a message as successfully sent.
@@ -34,7 +53,6 @@ func ConnectProducer(brokerUrls []string) (sarama.SyncProducer, error) {
 	// multiple brokers before being considered successful.
 	config.Producer.RequiredAcks = sarama.WaitForAll
 
-
 	//max number of retry when failed to connect to Producer
 	config.Producer.Retry.Max = 3
 
@@ -46,11 +64,24 @@ func ConnectProducer(brokerUrls []string) (sarama.SyncProducer, error) {
 	return producer, nil
 }
 
-func ConnectConsumer(brokerUrls []string, groupID string) (sarama.ConsumerGroup, error) {
+func ConnectConsumer(brokerUrls []string, apiKey, secret, groupID string) (sarama.ConsumerGroup, error) {
 	config := sarama.NewConfig()
+	if apiKey != "" && secret != "" {
+		config.Net.SASL.Enable = true
+		config.Net.SASL.User = apiKey
+		config.Net.SASL.Password = secret
+		config.Net.SASL.Mechanism = "PLAIN"
+		config.Net.SASL.Handshake = true
+		config.Net.SASL.Version = sarama.SASLHandshakeV1
+		config.Net.TLS.Enable = true
+		config.Net.TLS.Config = &tls.Config{
+			InsecureSkipVerify: true,
+			ClientAuth:         tls.NoClientCert,
+		}
+	}
+
 	config.Consumer.Return.Errors = true
 	config.Consumer.Fetch.Max = 3
-
 	consumer, err := sarama.NewConsumerGroup(brokerUrls, groupID, config)
 	if err != nil {
 		log.Printf("error: ConnectConsumer: Failed to connect to consumer: %s", err.Error())
@@ -73,8 +104,8 @@ func DecodeMessage(obj any, value []byte) error {
 	return nil
 }
 
-func PushMessageWithKeyToQueue(brokerUrls []string, topic, key string, message []byte) error {
-	producer, err := ConnectProducer(brokerUrls)
+func PushMessageWithKeyToQueue(brokerUrls []string, apiKey, secret, topic, key string, message []byte) error {
+	producer, err := ConnectProducer(brokerUrls, apiKey, secret)
 	if err != nil {
 		log.Printf("error: PushMessageWithKeyToQueue: %s\n", err.Error())
 		return errors.New("error: connect to producer failed")

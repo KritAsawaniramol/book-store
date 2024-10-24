@@ -16,7 +16,7 @@ type (
 
 	Claims struct {
 		UserID uint `json:"user_id"`
-		RoleID uint `josn:"role_id"`
+		RoleID uint `json:"role_id"`
 	}
 
 	// custom claims
@@ -115,9 +115,9 @@ func ReloadToken(secret string, expiredAt int64, claims *Claims) string {
 			Claims: &AuthMapClaims{
 				Claims: claims,
 				RegisteredClaims: jwt.RegisteredClaims{
-					Issuer:    "myAnimeList.com",
+					Issuer:    "book-store.com",
 					Subject:   "refresh-token",
-					Audience:  []string{"myAnimeList.com"},
+					Audience:  []string{"book-store.com"},
 					ExpiresAt: jwtTimeRepeatAdapter(expiredAt),
 					NotBefore: jwt.NewNumericDate(now()),
 					IssuedAt:  jwt.NewNumericDate(now()),

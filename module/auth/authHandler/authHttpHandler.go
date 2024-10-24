@@ -38,7 +38,7 @@ func (a *authHttpHandlerImpl) RefreshToken(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	
+
 	ctx.JSON(http.StatusOK, credentialRes)
 }
 

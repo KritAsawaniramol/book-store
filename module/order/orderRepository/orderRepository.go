@@ -16,4 +16,6 @@ type OrderRepository interface {
 	AddBookToShelf(cfg *config.Config, req *shelf.AddBooksReq) error
 	RollbackUserTransaction(cfg *config.Config, req *user.RollbackUserTransactionReq) error
 	RollbackAddBooks(cfg *config.Config, req *shelf.RollbackAddBooks) error
+	FindOrdersWithBookDetail(in *order.Orders, status []string) ([]order.Orders, error)
+	GetOrders(ids []uint, userIDs []uint, status []string, preloadOrdersBooks bool) ([]order.Orders, error) 
 }

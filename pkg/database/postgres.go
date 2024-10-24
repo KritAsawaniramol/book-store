@@ -45,14 +45,16 @@ func NewPostgresDatabase(cfg *config.Config) Database {
 					Colorful:      true,        // Disable color
 				},
 			)
-			_ = DBLogger
 			db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-				// Logger: DBLogger,
+				Logger:      DBLogger,
+				PrepareStmt: false,
 			})
 			if err != nil {
 				panic("failed to connect database")
 			}
+
 			dbConn = &postgresDatabase{Db: db}
+
 		} else {
 			log.Println("Database connection already created.")
 		}

@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -22,11 +23,14 @@ import (
 type (
 	BookHttpHandler interface {
 		CreateOneBook(ctx *gin.Context)
-		GetBookCover(ctx *gin.Context)
 		SearchBooks(ctx *gin.Context)
 		GetOneBook(ctx *gin.Context)
 		GetTags(ctx *gin.Context)
 		GetBookCoverImage(ctx *gin.Context)
+		ReadBook(ctx *gin.Context)
+		UpdateOneBook(ctx *gin.Context)
+		UpdateOneBookCover(ctx *gin.Context)
+		UpdateOneBookFile(ctx *gin.Context)
 	}
 
 	bookHttpHandlerImpl struct {
@@ -35,10 +39,88 @@ type (
 	}
 )
 
+// UpdateOneBookFile implements BookHttpHandler.
+func (b *bookHttpHandlerImpl) UpdateOneBookFile(ctx *gin.Context) {
+	wrapper := request.ContextWrapper(ctx)
+	bookIDStr := ctx.Param("id")
+	bookID, err := strconv.ParseUint(bookIDStr, 10, 64)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	bookFilePath, err := wrapper.SavePdfFormFile("book_file", "asset/book")
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	if err := b.bookUsecase.UpdateOneBookFile(uint(bookID), bookFilePath); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}
+
+// UpdateOneBookCover implements BookHttpHandler.
+func (b *bookHttpHandlerImpl) UpdateOneBookCover(ctx *gin.Context) {
+	wrapper := request.ContextWrapper(ctx)
+	bookIDStr := ctx.Param("id")
+	bookID, err := strconv.ParseUint(bookIDStr, 10, 64)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	imagePath, err := wrapper.SaveImageFormFile("book_cover", "asset/image/bookCover")
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	if err := b.bookUsecase.UpdateOneBookCover(uint(bookID), imagePath); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	ctx.Status(http.StatusOK)
+}
+
+// ReadBook implements BookHttpHandler.
+func (b *bookHttpHandlerImpl) ReadBook(ctx *gin.Context) {
+	bookID := ctx.GetUint("bookID")
+
+	filePath, err := b.bookUsecase.GetOneBookFilePath(bookID)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("error: ReadBook: %s\n", err.Error())
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	defer file.Close()
+	ctx.Writer.Header().Set("Content-type", "application/pdf")
+	if _, err := io.Copy(ctx.Writer, file); err != nil {
+		log.Printf("error: ReadBook: %s\n", err.Error())
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+	ctx.Status(http.StatusOK)
+}
+
 // GetBookCoverImage implements BookHttpHandler.
 func (b *bookHttpHandlerImpl) GetBookCoverImage(ctx *gin.Context) {
 	fileName := ctx.Param("fileName")
+	if fileName == "book-store_default_bookCover.png" {
+		fileName = "default/" + fileName
+	}
 	file, err := os.Open("./asset/image/bookCover/" + fileName)
+	log.Println(fileName)
 	if err != nil {
 		log.Printf("error: %s\n", err.Error())
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -103,7 +185,7 @@ func (b *bookHttpHandlerImpl) GetOneBook(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	res, err := b.bookUsecase.GetOneBook(uint(bookID))
+	res, err := b.bookUsecase.GetOneBook(uint(bookID), ctx.GetUint("roleID"))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -119,7 +201,7 @@ func (b *bookHttpHandlerImpl) SearchBooks(ctx *gin.Context) {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	res, err := b.bookUsecase.SearchBooks(req)
+	res, err := b.bookUsecase.SearchBooks(req, ctx.GetUint("roleID"))
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -127,34 +209,47 @@ func (b *bookHttpHandlerImpl) SearchBooks(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// GetBookCover implements BookHttpHandler.
-func (b *bookHttpHandlerImpl) GetBookCover(ctx *gin.Context) {
+
+// UpdateOneBook implements BookHttpHandler.
+func (b *bookHttpHandlerImpl) UpdateOneBook(ctx *gin.Context) {
+	wrapper := request.ContextWrapper(ctx)
+	req := &book.UpdateBookDetailReq{}
+
 	bookIDStr := ctx.Param("id")
 	bookID, err := strconv.ParseUint(bookIDStr, 10, 64)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	res, err := b.bookUsecase.GetOneBook(uint(bookID))
-	if err != nil {
+	req.BookID = uint(bookID)
+
+	if err := wrapper.Bind(req); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	ctx.JSON(http.StatusOK, res)
+
+	if err := b.bookUsecase.UpdateOneBookDetail(req); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	}
+
+	ctx.Status(http.StatusOK)
 }
 
 // CreateOneBook implements BookHttpHandler.
 func (b *bookHttpHandlerImpl) CreateOneBook(ctx *gin.Context) {
 	wrapper := request.ContextWrapper(ctx)
 	req := &book.CreateBookReq{}
+
 	if err := wrapper.BindPostForm(req); err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
+	imageNotFound := false
 	imagePath, err := wrapper.SaveImageFormFile("book_cover", "asset/image/bookCover")
 	if err != nil {
 		if err.Error() == "error: image not found" {
+			imageNotFound = true
 			imagePath = "asset/image/bookCover/default/book-store_default_bookCover.png"
 		} else {
 			ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -164,7 +259,9 @@ func (b *bookHttpHandlerImpl) CreateOneBook(ctx *gin.Context) {
 
 	bookFilePath, err := wrapper.SavePdfFormFile("book_file", "asset/book")
 	if err != nil {
-		rollBackSaveFile(imagePath)
+		if !imageNotFound {
+			rollBackSaveFile(imagePath)
+		}
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}

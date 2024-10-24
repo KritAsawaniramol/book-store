@@ -27,6 +27,7 @@ type ginServer struct {
 	middleware middlewareHandler.MiddlewareHttpHandler
 }
 
+
 func newMiddleware(cfg *config.Config, db *gorm.DB) middlewareHandler.MiddlewareHttpHandler {
 	repo := middlewareRepository.NewMiddlewareRepositoryImpl(db)
 	usecase := middlewareUsecase.NewMiddlewareUsecaseImpl(repo)
@@ -46,7 +47,8 @@ func NewGinServer(cfg *config.Config, db *gorm.DB) Server {
 func (g *ginServer) Start() {
 	// Define your allowed origins
 	allowedOrigins := []string{
-		fmt.Sprintf("http://%s:%d", g.cfg.Client.Host, g.cfg.Client.Port),
+		"*",
+		// fmt.Sprintf("http://%s:%d", g.cfg.Client.Host, g.cfg.Client.Port),
 	}
 
 	// Configure CORS middleware with multiple allowed origins
@@ -82,10 +84,7 @@ func (g *ginServer) Start() {
 		g.orderServer()
 	}
 
-	// g.authService()
-	// g.userService()
-	// g.commentService()
-	// g.animeListService()
+	
 
 	serverUrl := fmt.Sprintf(":%d", g.cfg.App.Port)
 	srv := &http.Server{

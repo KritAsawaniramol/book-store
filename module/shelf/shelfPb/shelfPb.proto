@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package shelfPb;
+option go_package = "github.com/kritAsawaniramol/module/shelf/shelfPb";
+
+
+
+message SearchUserShelfReq {
+    uint64 user_id = 1;
+    uint64 book_id = 2;
+}
+
+message SearchUserShelfRes {
+    bool is_valid = 1;
+}
+
+service ShelfGrpcService {
+    rpc SearchUserShelf(SearchUserShelfReq) returns (SearchUserShelfRes); 
+}

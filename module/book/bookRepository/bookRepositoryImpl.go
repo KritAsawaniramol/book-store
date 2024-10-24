@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/kritAsawaniramol/book-store/module/book"
 	"gorm.io/gorm"
@@ -12,6 +11,44 @@ import (
 
 type bookRepositoryImpl struct {
 	db *gorm.DB
+}
+
+// UpdateNonZeroBookFields implements BookRepository.
+func (b *bookRepositoryImpl) UpdateNonZeroBookFields(bookID uint, in *book.Books) error {
+	condition := &book.Books{}
+	condition.ID = bookID
+	if err := b.db.Model(condition).Where(condition).Updates(&in).Error; err != nil {
+		log.Printf("error: UpdateNonZeroBookFields: %s\n", err.Error())
+		return errors.New("error: update book failed")
+	}
+	return nil
+}
+
+// UpdateOneBookDetail implements BookRepository.
+func (b *bookRepositoryImpl) UpdateOneBookDetail(bookID uint, in *book.Books) error {
+	condition := &book.Books{}
+	condition.ID = bookID
+	err := b.db.Transaction(func(tx *gorm.DB) error {
+
+		// update book
+		if err := tx.
+			Model(&book.Books{}).
+			Where(condition).Select("Title", "Price", "Description", "AuthorName", "IsAvailableInStore").Updates(in).Error; err != nil {
+			return err
+		}
+
+		//Replace Associations
+		if err := tx.Model(condition).Association("Tags").Replace(in.Tags); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		log.Printf("error: UpdateOneBookDetail: %s\n", err.Error())
+		return errors.New("error: update book failed")
+	}
+	return nil
 }
 
 // GetBooksInIDs implements BookRepository.
@@ -39,7 +76,7 @@ func (b *bookRepositoryImpl) GetTags(in *book.Tags) ([]book.Tags, error) {
 
 // GetOneBook implements BookRepository.
 func (b *bookRepositoryImpl) GetOneBook(in *book.Books) (*book.Books, error) {
-	if err := b.db.Preload("Tags").First(&in).Error; err != nil {
+	if err := b.db.Preload("Tags").Where(&in).First(&in).Error; err != nil {
 		log.Printf("error: GetOneBook: %s\n", err.Error())
 		return nil, errors.New("error: get book failed")
 	}
@@ -55,59 +92,70 @@ func (b *bookRepositoryImpl) SearchBook(
 	maxPrice *uint,
 	minPrice *uint,
 	authorName string,
+	isAvailable *bool,
 	tagIDs []*uint,
 ) ([]book.Books, int64, error) {
-	conditions := []string{}
-	conditionsValue := []interface{}{}
-	if title != "" {
-		conditions = append(conditions, "title LIKE ?")
-		conditionsValue = append(conditionsValue, fmt.Sprintf("%s%%", title))
-	}
-
-	if maxPrice != nil {
-		conditions = append(conditions, "price <= ?")
-		conditionsValue = append(conditionsValue, *maxPrice)
-	}
-
-	if minPrice != nil {
-		conditions = append(conditions, "price >= ?")
-		conditionsValue = append(conditionsValue, *minPrice)
-	}
-
-	if authorName != "" {
-		conditions = append(conditions, "author_name LIKE ?")
-		conditionsValue = append(conditionsValue, fmt.Sprintf("%s%%", authorName))
-	}
-	conditionsStr := strings.Join(conditions, " AND ")
-	conds := make([]interface{}, 0)
-	conds = append(conds, conditionsStr)
-	conds = append(conds, conditionsValue...)
-
-	books := []book.Books{}
+	// conditions := []string{}
+	// conditionsValue := []interface{}{}
 	var count int64
+	books := []book.Books{}
+	err := b.db.Transaction(func(tx *gorm.DB) error {
+		tx = tx.Model(&book.Books{})
+		if title != "" {
+			tx = tx.Where("title LIKE ?", fmt.Sprintf("%s%%", title))
+			// conditions = append(conditions, "title LIKE ?")
+			// conditionsValue = append(conditionsValue, fmt.Sprintf("%s%%", title))
+		}
 
-	tx := b.db.Model(&book.Books{})
-	for i, tagID := range tagIDs {
-		alias := fmt.Sprintf("bt%d", i)
-		tx = tx.Joins(
-			fmt.Sprintf("JOIN books_tags %s ON books.id = %s.books_id AND %s.tags_id = %d",
-				alias, alias, alias, tagID),
-		)
-	}
+		if maxPrice != nil {
+			tx = tx.Where("price <= ?", *maxPrice)
 
-	result := tx.
-		Order(order).
-		Offset(int(offest)).
-		Limit(int(limit)).
-		Preload("Tags").
-		// Find(&books, c...)
-		Find(&books, conds...)
-	if result.Error != nil {
-		log.Printf("error: GetBooks: %s\n", result.Error.Error())
-		return books, 0, errors.New("error: get books failed")
+			// conditions = append(conditions, "price <= ?")
+			// conditionsValue = append(conditionsValue, *maxPrice)
+		}
+
+		if minPrice != nil {
+			tx = tx.Where("price >= ?", *minPrice)
+
+			// conditions = append(conditions, "price >= ?")
+			// conditionsValue = append(conditionsValue, *minPrice)
+		}
+
+		if authorName != "" {
+			tx = tx.Where("author_name LIKE ?", fmt.Sprintf("%s%%", authorName))
+
+			// conditions = append(conditions, "author_name LIKE ?")
+			// conditionsValue = append(conditionsValue, fmt.Sprintf("%s%%", authorName))
+		}
+		if isAvailable != nil {
+			tx = tx.Where("is_available_in_store = ?", *isAvailable)
+		}
+		for i, tagID := range tagIDs {
+
+			alias := fmt.Sprintf("bt%d", i)
+			tx = tx.Joins(
+				fmt.Sprintf("JOIN books_tags %s ON books.id = %s.books_id AND %s.tags_id = %d",
+					alias, alias, alias, *tagID),
+			)
+		}
+
+		result := tx.
+			Preload("Tags").
+			Order(order).
+			Count(&count).
+			Offset(int(offest)).
+			Limit(int(limit)).
+			Find(&books)
+		if result.Error != nil {
+			log.Printf("error: GetBooks: %s\n", result.Error.Error())
+			return errors.New("error: get books failed")
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, 0, err
 	}
-	result.Count(&count)
-	fmt.Printf("count: %v\n", count)
 	return books, count, nil
 }
 

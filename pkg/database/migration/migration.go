@@ -59,25 +59,40 @@ func userMigration(db database.Database, cfg *config.Config) {
 		&user.User{},
 		&user.Role{},
 		&user.UserTransactions{},
+		&user.TopUpOrder{},
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	roles := []user.Role{{RoleTitle: "admin"}, {RoleTitle: "customer"}}
+	// roles := []user.Role{{RoleTitle: "admin"}, {RoleTitle: "customer"}}
+	
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(cfg.Admin.Password), bcrypt.DefaultCost)
 	if err != nil {
 		panic(err)
 	}
-	user := []user.User{{Username: cfg.Admin.Username, Password: string(hashedPassword), RoleID: 1}}
-
-	if err := db.GetDb().CreateInBatches(roles, 2).Error; err != nil {
+	// users := []user.User{{Username: cfg.Admin.Username, Password: string(hashedPassword), RoleID: 1}}
+	
+	
+	if err := db.GetDb().FirstOrCreate(&user.Role{}, &user.Role{RoleTitle: "admin"}).Error; err != nil {
+		panic(err)
+	}
+	if err := db.GetDb().FirstOrCreate(&user.Role{}, &user.Role{RoleTitle: "customer"}).Error; err != nil {
 		panic(err)
 	}
 
-	if err := db.GetDb().Create(user).Error; err != nil {
+
+	// if err := db.GetDb().CreateInBatches(roles, 2).Error; err != nil {
+	// 	panic(err)
+	// }
+
+	if err := db.GetDb().FirstOrCreate(&user.User{}, &user.User{Username: cfg.Admin.Username, Password: string(hashedPassword), RoleID: 1}).Error; err != nil {
 		panic(err)
 	}
+
+	// if err := db.GetDb().Create(users).Error; err != nil {
+	// 	panic(err)
+	// }
 
 	log.Println("User database migration completed!")
 }
@@ -110,8 +125,9 @@ func bookMigration(db database.Database) {
 func orderMigration(db database.Database) {
 	err := db.GetDb().AutoMigrate(
 		&order.Orders{},
-		&order.OrderBook{},
+		&order.OrdersBooks{},
 	)
+
 
 	if err != nil {
 		panic(err)

@@ -2,6 +2,7 @@ package middlewareUsecase
 
 import (
 	"errors"
+	"log"
 
 	"github.com/kritAsawaniramol/book-store/config"
 	"github.com/kritAsawaniramol/book-store/module/middleware/middlewareRepository"
@@ -12,10 +13,21 @@ type middlewareUsecaseImpl struct {
 	middlewareRepository middlewareRepository.MiddlewareRepository
 }
 
+// BookOwnershipAuthorization implements MiddlewareUsecase.
+func (m *middlewareUsecaseImpl) BookOwnershipAuthorization(cfg *config.Config, roleID uint, userID uint, bookID uint) error {
+	// admin bypass
+	if roleID == 1 {
+		log.Println("admin read book")
+		return nil
+	}
+
+	return m.middlewareRepository.BookShelfSearch(cfg.Grpc.ShelfUrl, userID, bookID)
+}
+
 // RbacAuthorization implements MiddlewareUsecase.
-func (m *middlewareUsecaseImpl) RbacAuthorization(roleID uint, expectedRoleID map[uint]bool)  error {
+func (m *middlewareUsecaseImpl) RbacAuthorization(roleID uint, expectedRoleID map[uint]bool) error {
 	v, ok := expectedRoleID[roleID]
-	if !ok || v == false {
+	if !ok || !v {
 		return errors.New("error: permission denied")
 	}
 	return nil

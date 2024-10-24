@@ -1,0 +1,15 @@
+.git
+.gitignore
+
+LICENSE
+README.md
+
+.air*
+
+*_test.go
+
+/localtest
+/screenshots
+/build
+/asset/image/bookCover/*.*
+/asset/book/*

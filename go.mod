@@ -68,6 +68,8 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
+	github.com/stripe/stripe-go v70.15.0+incompatible
+	github.com/stripe/stripe-go/v80 v80.2.0
 	golang.org/x/text v0.17.0 // indirect
 	gorm.io/driver/postgres v1.5.9
 )

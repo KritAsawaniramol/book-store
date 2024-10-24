@@ -14,7 +14,7 @@ func (g *ginServer) orderServer() {
 	repo := orderRepository.NewOrderRepositoryImpl(g.db)
 	usecase := orderUsecase.NewOrderUsecaseImpl(repo)
 	httpHandler := orderHandler.NewOrderHttpHandlerImpl(g.cfg, usecase)
-	queueConn, err := queue.ConnectConsumer([]string{g.cfg.Kafka.Url}, g.cfg.Kafka.GroupID)
+	queueConn, err := queue.ConnectConsumer([]string{g.cfg.Kafka.Url}, g.cfg.Kafka.ApiKey, g.cfg.Kafka.Secret, g.cfg.Kafka.GroupID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,12 +28,34 @@ func (g *ginServer) orderServer() {
 		}
 	}()
 
-	// go func() {
-	// 	err := <-queueConn.Errors()
-	// 	log.Printf("error: queueConn: %s\n", err.Error())
-	// }()
-
-	// consumerHandler := orderHandler.NewOrderHttpHandlerImpl()
-
-	g.app.POST("/order/buy", g.middleware.JwtAuthorization(), httpHandler.BuyBooks)
+	order := g.app.Group("/order_v1")
+	
+	order.GET("", g.healthCheck)
+	order.POST("/order/buy",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+			map[uint]bool{
+				2: true,
+			},
+		),
+		httpHandler.BuyBooks,
+	)
+	order.GET("/order/myorder",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+			map[uint]bool{
+				2: true,
+			},
+		),
+		httpHandler.SearchOneMyOrder,
+	)
+	order.GET("/order",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+			map[uint]bool{
+				2: true,
+			},
+		),
+		httpHandler.GetMyOrders,
+	)
 }

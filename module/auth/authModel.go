@@ -28,11 +28,11 @@ type (
 	}
 
 	LogoutReq struct {
-		CredentialID uint `json:"credential_id" validate:"required,max=64"`
+		CredentialID uint `json:"credential_id" validate:"required"`
 	}
 
 	RefreshTokenReq struct {
-		CredentialID uint   `json:"credential_id" validate:"required,max=64"`
-		RefreshToken string `json:"refresh_token" validate:"required,jwt,max=500"`
+		CredentialID uint   `json:"credential_id" validate:"required"`
+		RefreshToken string `json:"refresh_token" validate:"required,max=500"`
 	}
 )

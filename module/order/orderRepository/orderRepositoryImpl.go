@@ -21,6 +21,52 @@ type orderRepositoryImpl struct {
 	db *gorm.DB
 }
 
+// GetOrders implements OrderRepository.
+func (o *orderRepositoryImpl) GetOrders(ids []uint, userIDs []uint, status []string, preloadOrdersBooks bool) ([]order.Orders, error) {
+	result := []order.Orders{}
+	err := o.db.Transaction(func(tx *gorm.DB) error {
+		// tx := o.db.Begin()
+		if len(ids) > 0 && ids != nil {
+			tx = tx.Where("id IN ?", ids)
+		}
+	
+		if len(userIDs) > 0 && userIDs != nil {
+			tx = tx.Where("user_id IN ?", userIDs)
+		}
+		if len(status) > 0 && status != nil {
+			tx = tx.Where("status IN ?", status)
+		}
+		if preloadOrdersBooks  {
+			tx = tx.Preload("OrdersBooks")
+		}
+	
+		if err := tx.Find(&result).Error; err != nil {
+			log.Printf("error: GetOrdersWithOrderBooks: %s\n", err.Error())
+			return  errors.New("error: get orders failed")
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// FindOneOrderWithBookDetail implements OrderRepository.
+func (o *orderRepositoryImpl) FindOrdersWithBookDetail(in *order.Orders, status []string) ([]order.Orders, error) {
+	result := []order.Orders{}
+	tx := o.db.Where(&in)
+	if len(status) > 0 || status == nil {
+		tx = tx.Where("status IN ?", status)
+	}
+
+	if err := tx.Preload("OrdersBooks").Find(&result).Error; err != nil {
+		log.Printf("error: FindOneOrderWithBookDetail: %s\n", err.Error())
+		return nil, errors.New("error: get order failed")
+	}
+	return result, nil
+}
+
 // RollbackAddBooks implements OrderRepository.
 func (o *orderRepositoryImpl) RollbackAddBooks(cfg *config.Config, req *shelf.RollbackAddBooks) error {
 	reqInByte, err := json.Marshal(req)
@@ -30,6 +76,8 @@ func (o *orderRepositoryImpl) RollbackAddBooks(cfg *config.Config, req *shelf.Ro
 	}
 	if err := queue.PushMessageWithKeyToQueue(
 		[]string{cfg.Kafka.Url},
+		cfg.Kafka.ApiKey,
+		cfg.Kafka.Secret,
 		"shelf",
 		"rollbackaddbook",
 		reqInByte,
@@ -49,6 +97,8 @@ func (o *orderRepositoryImpl) RollbackUserTransaction(cfg *config.Config, req *u
 	}
 	if err := queue.PushMessageWithKeyToQueue(
 		[]string{cfg.Kafka.Url},
+		cfg.Kafka.ApiKey,
+		cfg.Kafka.Secret,
 		"user",
 		"rollbackusertransaction",
 		reqInByte,
@@ -68,6 +118,8 @@ func (o *orderRepositoryImpl) AddBookToShelf(cfg *config.Config, req *shelf.AddB
 	}
 	if err := queue.PushMessageWithKeyToQueue(
 		[]string{cfg.Kafka.Url},
+		cfg.Kafka.ApiKey,
+		cfg.Kafka.Secret,
 		"shelf",
 		"addbook",
 		reqInByte,
@@ -97,6 +149,8 @@ func (o *orderRepositoryImpl) DecreaseUserMoney(cfg *config.Config, req *user.Bu
 
 	if err := queue.PushMessageWithKeyToQueue(
 		[]string{cfg.Kafka.Url},
+		cfg.Kafka.ApiKey,
+		cfg.Kafka.Secret,
 		"user",
 		"buy",
 		reqInByte,

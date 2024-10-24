@@ -8,10 +8,7 @@ import (
 	"github.com/kritAsawaniramol/book-store/module/book/bookUsecase"
 )
 
-type (
-	BookGrpcHandler interface {
-	}
-
+type (	
 	bookGrpcHandlerImpl struct {
 		cfg         *config.Config
 		bookUsecase bookUsecase.BookUsecase

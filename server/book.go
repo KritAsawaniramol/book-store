@@ -23,18 +23,65 @@ func (g *ginServer) bookService() {
 		grpcServer.Serve(listener)
 	}()
 
-	// g.app.Static("/book/cover", "./asset/image/bookCover")
-	g.app.StaticFile("/book/file", "./asset/book")
-	g.app.GET("/book/cover/:fileName", httpHandler.GetBookCoverImage)
-	g.app.GET("/book", httpHandler.SearchBooks)
-	g.app.GET("/book/:id", httpHandler.GetOneBook)
-	g.app.GET("/book/tags", httpHandler.GetTags)
+	book := g.app.Group("/book_v1")
 
-	g.app.POST("/book",
+	book.GET("", g.healthCheck)
+	book.StaticFile("/book/file", "./asset/book")
+	book.GET("/book/cover/:fileName", httpHandler.GetBookCoverImage)
+	book.GET("/book", httpHandler.SearchBooks)
+	book.GET("/admin/book",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+			map[uint]bool{
+				1: true,
+			},
+		), httpHandler.SearchBooks)
+
+	book.GET("/book/:id", httpHandler.GetOneBook)
+	book.GET("/admin/book/:id",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+		map[uint]bool{
+				1: true,
+			},
+		), httpHandler.GetOneBook)
+
+	book.GET("/book/tags", httpHandler.GetTags)
+	book.GET("/book/read/:bookID",
+		g.middleware.JwtAuthorization(),
+		g.middleware.BookOwnershipAuthorization(),
+		httpHandler.ReadBook)
+
+	book.POST("/book",
 		g.middleware.JwtAuthorization(),
 		g.middleware.RbacAuthorization(
 			map[uint]bool{
 				1: true,
 			},
 		), httpHandler.CreateOneBook)
+
+	book.PATCH("/book/:id",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+			map[uint]bool{
+				1: true,
+			},
+		), httpHandler.UpdateOneBook)
+
+	book.PATCH("/book/cover/:id",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+			map[uint]bool{
+				1: true,
+			},
+		), httpHandler.UpdateOneBookCover)
+
+	book.PATCH("/book/file/:id",
+		g.middleware.JwtAuthorization(),
+		g.middleware.RbacAuthorization(
+			map[uint]bool{
+				1: true,
+			},
+		), httpHandler.UpdateOneBookFile)
+
 }
