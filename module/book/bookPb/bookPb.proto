@@ -1,9 +1,32 @@
 // proto version
 syntax = "proto3";
 
-// Package name
-option go_package = "github.com/kritAsawaniramol/book-store";
+package bookPb;
+option go_package = "github.com/kritAsawaniramol/module/book/bookPb";
 
+message FindBooksInIdsReq {
+    repeated uint64 ids = 1;
+}
+
+message FindBooksInIdsRes {
+    repeated Book book = 1;
+}
+
+message Book {
+    uint64 id = 1;
+    string title = 2;
+    uint64 price = 3;
+    string file_path = 4;
+    string cover_image_path = 5;
+    string author_name = 6;
+    repeated Tags tags = 7;
+}
+
+message Tags {
+    uint64 id = 1;
+    string name = 2;
+}
 
 service BookGrpcService {
+    rpc FindBooksInIds(FindBooksInIdsReq) returns (FindBooksInIdsRes);
 }

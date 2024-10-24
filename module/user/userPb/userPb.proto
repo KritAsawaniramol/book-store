@@ -14,11 +14,16 @@ message UserProfile {
     google.protobuf.Timestamp updated_at = 6;
 }
 
-message FindUserProfileReq {
+message FindUserProfileToLoginReq {
     string username = 1;
     string password = 2;
 }
 
+message FindOneUserProfileToRefreshReq {
+    uint64 user_id = 1;
+}
+
 service UserGrpcService {
-    rpc FindUserProfile(FindUserProfileReq) returns (UserProfile); 
+    rpc FindUserProfileToLogin(FindUserProfileToLoginReq) returns (UserProfile); 
+    rpc FindOneUserProfileToRefresh(FindOneUserProfileToRefreshReq) returns (UserProfile); 
 }

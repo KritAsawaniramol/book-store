@@ -3,9 +3,9 @@ package shelf
 import "gorm.io/gorm"
 
 type (
-	Shelf struct {
+	Shelves struct {
 		gorm.Model
+		UsersID uint `gorm:"not null"`
 		BooksID uint `gorm:"not null"`
-		Users   uint `gorm:"not null"`
 	}
 )

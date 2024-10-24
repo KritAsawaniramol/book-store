@@ -16,6 +16,16 @@ type authRepositoryImpl struct {
 	db *gorm.DB
 }
 
+// UpdateOneCredential implements AuthRepository.
+func (a *authRepositoryImpl) UpdateOneCredentialByID(credentialID uint, in *auth.Credential) error {
+	err := a.db.Model(&auth.Credential{}).Where("id = ?", credentialID).Updates(in).Error
+	if err != nil {
+		log.Printf("error: UpdateOneCredential: %s\n", err.Error())
+		return errors.New("error: update credential failed")
+	}
+	return nil
+}
+
 // DeleteOneUserCredentialByID implements AuthRepository.
 func (a *authRepositoryImpl) DeleteOneUserCredentialByID(credentialID uint) error {
 	if err := a.db.Delete(&auth.Credential{}, credentialID).Error; err != nil {
@@ -47,9 +57,8 @@ func (a *authRepositoryImpl) CreateOneUserCredential(in *auth.Credential) (uint,
 	return in.ID, nil
 }
 
-// findUserProfile implements AuthRepository.
-func (a *authRepositoryImpl) FindOneUserProfile(grpcUrl string, req *userPb.FindUserProfileReq) (*userPb.UserProfile, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+func (a *authRepositoryImpl) FindOneUserProfileToLogin(grpcUrl string, req *userPb.FindUserProfileToLoginReq) (*userPb.UserProfile, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	conn, err := grpccon.NewGrpcClient(grpcUrl)
@@ -57,10 +66,28 @@ func (a *authRepositoryImpl) FindOneUserProfile(grpcUrl string, req *userPb.Find
 		return nil, err
 	}
 
-	userProfile, err := conn.User().FindUserProfile(ctx, req)
+	userProfile, err := conn.User().FindUserProfileToLogin(ctx, req)
 	if err != nil {
-		log.Printf("error: FindOneUserProfile: %s\n", err.Error())
+		log.Printf("error: FindOneUserProfileToLogin: %s\n", err.Error())
 		return nil, errors.New("error: email or password are incorrect")
+	}
+	return userProfile, nil
+}
+
+// FindOneUserProfileToRefresh implements AuthRepository.
+func (a *authRepositoryImpl) FindOneUserProfileToRefresh(grpcUrl string, req *userPb.FindOneUserProfileToRefreshReq) (*userPb.UserProfile, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	conn, err := grpccon.NewGrpcClient(grpcUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	userProfile, err := conn.User().FindOneUserProfileToRefresh(ctx, req)
+	if err != nil {
+		log.Printf("error: FindOneUserProfileToRefresh: %s\n", err.Error())
+		return nil, errors.New("error: user not found")
 	}
 	return userProfile, nil
 }

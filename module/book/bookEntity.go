@@ -5,24 +5,19 @@ import "gorm.io/gorm"
 type (
 	Books struct {
 		gorm.Model
-		Title         string
-		Price         int64
-		FileUrl       string
-		CoverImageUrl string
-		AuthorName    string
-		Genres        []BooksGenres
+		Title              string
+		Price              uint
+		FilePath           string
+		Description        string
+		CoverImagePath     string
+		AuthorName         string
+		IsAvailableInStore bool
+		Tags               []Tags `gorm:"many2many:books_tags;"`
 	}
 
-	BooksGenres struct {
-		BooksID  uint   `gorm:"primaryKey"`
-		Books    Books  `gorm:"foreignKey:BooksID;references:ID"`
-		GenresID uint   `gorm:"primaryKey"`
-		Genres   Genres `gorm:"foreignKey:GenresID;references:ID"`
-	}
-
-	Genres struct {
+	Tags struct {
 		gorm.Model
-		GenresTitle string
-		Books       []BooksGenres
+		Name  string
+		Books []Books `gorm:"many2many:books_tags;"`
 	}
 )

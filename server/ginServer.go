@@ -14,22 +14,32 @@ import (
 	"github.com/gin-contrib/timeout"
 	"github.com/gin-gonic/gin"
 	"github.com/kritAsawaniramol/book-store/config"
+	"github.com/kritAsawaniramol/book-store/module/middleware/middlewareHandler"
+	"github.com/kritAsawaniramol/book-store/module/middleware/middlewareRepository"
+	"github.com/kritAsawaniramol/book-store/module/middleware/middlewareUsecase"
 	"gorm.io/gorm"
 )
 
 type ginServer struct {
-	app *gin.Engine
-	db  *gorm.DB
-	cfg *config.Config
-	// middleware middlewareHandler.MiddlewareHandlerService
+	app        *gin.Engine
+	db         *gorm.DB
+	cfg        *config.Config
+	middleware middlewareHandler.MiddlewareHttpHandler
+}
+
+
+func newMiddleware(cfg *config.Config, db *gorm.DB) middlewareHandler.MiddlewareHttpHandler {
+	repo := middlewareRepository.NewMiddlewareRepositoryImpl(db)
+	usecase := middlewareUsecase.NewMiddlewareUsecaseImpl(repo)
+	return middlewareHandler.NewMiddlewareHttpHandlerImpl(cfg, usecase)
 }
 
 func NewGinServer(cfg *config.Config, db *gorm.DB) Server {
 	return &ginServer{
-		app: gin.New(),
-		db:  db,
-		cfg: cfg,
-		// middleware: newMiddleware(cfg, db),
+		app:        gin.New(),
+		db:         db,
+		cfg:        cfg,
+		middleware: newMiddleware(cfg, db),
 	}
 }
 
@@ -37,7 +47,8 @@ func NewGinServer(cfg *config.Config, db *gorm.DB) Server {
 func (g *ginServer) Start() {
 	// Define your allowed origins
 	allowedOrigins := []string{
-		fmt.Sprintf("http://%s:%d", g.cfg.Client.Host, g.cfg.Client.Port),
+		"*",
+		// fmt.Sprintf("http://%s:%d", g.cfg.Client.Host, g.cfg.Client.Port),
 	}
 
 	// Configure CORS middleware with multiple allowed origins
@@ -69,14 +80,11 @@ func (g *ginServer) Start() {
 		g.shelfService()
 	case "book":
 		g.bookService()
-	case "payment":
-		g.paymentServer()
+	case "order":
+		g.orderServer()
 	}
 
-	// g.authService()
-	// g.userService()
-	// g.commentService()
-	// g.animeListService()
+	
 
 	serverUrl := fmt.Sprintf(":%d", g.cfg.App.Port)
 	srv := &http.Server{

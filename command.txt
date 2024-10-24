@@ -1,14 +1,14 @@
 # Migration
 go run pkg/database/migration/migration.go ./env/dev/.env.auth
 go run pkg/database/migration/migration.go ./env/dev/.env.book
-go run pkg/database/migration/migration.go ./env/dev/.env.payment
+go run pkg/database/migration/migration.go ./env/dev/.env.order
 go run pkg/database/migration/migration.go ./env/dev/.env.shelf
 go run pkg/database/migration/migration.go ./env/dev/.env.user
 
 # Start Server
 go run main.go ./env/dev/.env.auth
 go run main.go ./env/dev/.env.book
-go run main.go ./env/dev/.env.payment
+go run main.go ./env/dev/.env.order
 go run main.go ./env/dev/.env.shelf
 go run main.go ./env/dev/.env.user
 
@@ -18,3 +18,63 @@ go run main.go ./env/dev/.env.user
 protoc --go_out=. --go_opt=paths=source_relative \
     --go-grpc_out=. --go-grpc_opt=paths=source_relative \
     ./module/user/userPb/userPb.proto
+
+protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    ./module/auth/authPb/authPb.proto
+
+protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    ./module/book/bookPb/bookPb.proto
+
+protoc --go_out=. --go_opt=paths=source_relative \
+    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+    ./module/shelf/shelfPb/shelfPb.proto
+
+
+### docker build and push to docker hub
+❯ docker build -f ./build/Dockerfile -t book-store:latest .
+❯ docker image tag book-store:latest krit23448/book-store:latest
+❯ docker image push krit23448/book-store:latest       
+
+### Apply Service to k8s
+kubectl apply -f ./build/auth/auth-service.yml
+kubectl apply -f ./build/user/user-service.yml
+kubectl apply -f ./build/book/book-service.yml
+kubectl apply -f ./build/shelf/shelf-service.yml
+kubectl apply -f ./build/order/order-service.yml
+
+### สร้าง Configmap
+kubectl create configmap <configmap-name> --from-file=<file_path>
+❯ kubectl create configmap book-store-env --from-file=./env/prod/.env
+configmap/book-store-env created
+
+## create nginx ingress (api gateway)
+### https://kubernetes.github.io/ingress-nginx/deploy/
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0-beta.0/deploy/static/provider/cloud/deploy.yaml
+
+### Apply File Script ต่างๆ
+kubectl apply -f <file_name>
+
+### Apply ingress
+❯ kubectl apply -f ./build/book-store-ingress.yml 
+ingress.networking.k8s.io/ingress-myservicea created
+
+### ดู Ingress หรือ Services หรือ Deployments หรือ Pod
+kubectl get ingress
+kubectl get services
+kubectl get deployments
+kubectl get pods
+
+### Apply Deployment
+kubectl apply -f ./build/auth/auth-deployment.yml
+kubectl apply -f ./build/user/user-deployment.yml
+kubectl apply -f ./build/book/book-deployment.yml
+kubectl apply -f ./build/shelf/shelf-deployment.yml
+kubectl apply -f ./build/order/order-deployment.yml
+
+### To delete all deployments inside the default namespace, use:
+kubectl delete deployment --all --namespace=default
+
+Get a shell to the running container:
+kubectl exec --stdin --tty <Pod name> -- /bin/bash

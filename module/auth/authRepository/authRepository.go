@@ -6,8 +6,10 @@ import (
 )
 
 type AuthRepository interface {
-	FindOneUserProfile(grpcUrl string, req *userPb.FindUserProfileReq) (*userPb.UserProfile, error)
+	FindOneUserProfileToLogin(grpcUrl string, req *userPb.FindUserProfileToLoginReq) (*userPb.UserProfile, error)
+	FindOneUserProfileToRefresh(grpcUrl string, req *userPb.FindOneUserProfileToRefreshReq) (*userPb.UserProfile, error)
 	CreateOneUserCredential(in *auth.Credential) (uint, error)
 	GetOneUserCredential(in *auth.Credential) (*auth.Credential, error)
 	DeleteOneUserCredentialByID(credentialID uint) error
+	UpdateOneCredentialByID(credentialID uint,in *auth.Credential) error
 }

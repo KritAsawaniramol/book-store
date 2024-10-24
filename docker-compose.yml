@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.9'
 
 services:
   auth-postgres:
@@ -18,8 +18,8 @@ services:
     image: postgres:latest
     container_name: user-postgres
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: 
+      POSTGRES_PASSWORD: 
       POSTGRES_DB: user-postgres
     ports:
       - "5432:5432"
@@ -45,8 +45,8 @@ services:
     image: postgres:latest
     container_name: book-postgres
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: 
+      POSTGRES_PASSWORD: 
       POSTGRES_DB: book-postgres
     ports:
       - "5434:5432"
@@ -54,35 +54,53 @@ services:
       - book-postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  payment-postgres:
+  order-postgres:
     image: postgres:latest
-    container_name: payment-postgres
+    container_name: order-postgres
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: payment-postgres
+      POSTGRES_USER: 
+      POSTGRES_PASSWORD: 
+      POSTGRES_DB: order-postgres
     ports:
       - "5435:5432"
     volumes:
-      - payment-postgres_data:/var/lib/postgresql/data
+      - order-postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: 
+      PGADMIN_DEFAULT_PASSWORD: 
     ports:
       - "5050:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     restart: unless-stopped
 
+  bookstore-kafka-1:
+    container_name: 'bookstore-kafka-1'
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '9092:9092'
+    volumes:
+      - bookstore-kafka-1:/bitnami/kafka/data
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@bookstore-kafka-1:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      # Accessing Kafka from outside contrainer
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+
 volumes:
   auth-postgres_data:
   user-postgres_data:
   shelf-postgres_data:
   book-postgres_data:
-  payment-postgres_data:
+  order-postgres_data:
   pgadmin_data:
+  bookstore-kafka-1:

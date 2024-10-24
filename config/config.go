@@ -11,16 +11,14 @@ import (
 
 type (
 	Config struct {
-		App      App
-		Client   Client
-		Db       Db
-		Kafka    Kafka
-		Grpc     Grpc
-		Jwt      Jwt
-		Sessions Sessions
-		Google   Google
-		Facebook Facebook
-		Admin    Admin
+		App    App
+		Client Client
+		Db     Db
+		Kafka  Kafka
+		Grpc   Grpc
+		Jwt    Jwt
+		Admin  Admin
+		Stripe Stripe
 	}
 
 	App struct {
@@ -31,8 +29,7 @@ type (
 	}
 
 	Client struct {
-		Host string
-		Port int
+		URL string
 	}
 
 	// Database
@@ -47,17 +44,18 @@ type (
 	}
 
 	Kafka struct {
-		Url    string
-		ApiKey string
-		Secret string
+		Url     string
+		GroupID string
+		ApiKey  string
+		Secret  string
 	}
 
 	Grpc struct {
-		AuthUrl    string
-		UserUrl    string
-		ShelfUrl   string
-		BookUrl    string
-		PaymentUrl string
+		AuthUrl  string
+		UserUrl  string
+		ShelfUrl string
+		BookUrl  string
+		OrderUrl string
 	}
 
 	Jwt struct {
@@ -67,24 +65,14 @@ type (
 		RefreshDuration  int64
 	}
 
-	Sessions struct {
-		Secret string
-		MaxAge int
-	}
-
-	Google struct {
-		ClientID     string
-		ClientSecret string
-	}
-
-	Facebook struct {
-		ClientID     string
-		ClientSecret string
-	}
-
 	Admin struct {
 		Username string
 		Password string
+	}
+
+	Stripe struct {
+		SecretKey      string
+		EndPointSecret string
 	}
 )
 
@@ -98,17 +86,14 @@ func LoadConfig(path string) *Config {
 		defer lock.Unlock()
 		if config == nil {
 			if err := godotenv.Load(path); err != nil {
-				
+
 				log.Fatalf("Error loading .env file: %s", err.Error())
 			}
 			appPort, err := strconv.Atoi(os.Getenv("APP_PORT"))
 			if err != nil {
 				log.Fatal("Error loading .env file: app's port is invalid")
 			}
-			clientPort, err := strconv.Atoi(os.Getenv("CLIENT_PORT"))
-			if err != nil {
-				log.Fatal("Error loading .env file: client's port is invalid")
-			}
+		
 
 			dbPort, err := strconv.Atoi(os.Getenv("DB_PORT"))
 			if err != nil {
@@ -125,11 +110,6 @@ func LoadConfig(path string) *Config {
 				log.Fatal(`Error loading .env file: db's "jwt refresh duration" is invalid`)
 			}
 
-			sessionsMaxAge, err := strconv.Atoi(os.Getenv("SESSIONS_MAX_AGE"))
-			if err != nil {
-				log.Fatal(`Error loading .env file: db's "sessions max age" is invalid`)
-			}
-
 			config = &Config{
 				App: App{
 					Stage: os.Getenv("APP_STAGE"),
@@ -139,8 +119,7 @@ func LoadConfig(path string) *Config {
 				},
 
 				Client: Client{
-					Host: os.Getenv("CLIENT_HOST"),
-					Port: clientPort,
+					URL:  os.Getenv("CLIENT_URL"),
 				},
 
 				Db: Db{
@@ -154,16 +133,17 @@ func LoadConfig(path string) *Config {
 				},
 
 				Kafka: Kafka{
-					Url:    os.Getenv("KAFKA_URL"),
-					ApiKey: os.Getenv("KAFKA_API_KEY"),
-					Secret: os.Getenv("KAFKA_SECRET"),
+					Url:     os.Getenv("KAFKA_URL"),
+					GroupID: os.Getenv("KAFKA_GROUP_ID"),
+					ApiKey:  os.Getenv("KAFKA_API_KEY"),
+					Secret:  os.Getenv("KAFKA_API_SECRET"),
 				},
 				Grpc: Grpc{
-					AuthUrl:    os.Getenv("GRPC_AUTH_URL"),
-					UserUrl:    os.Getenv("GRPC_USER_URL"),
-					ShelfUrl:   os.Getenv("GRPC_SHELF_URL"),
-					BookUrl:    os.Getenv("GRPC_BOOK_URL"),
-					PaymentUrl: os.Getenv("GRPC_PAYMENT_URL"),
+					AuthUrl:  os.Getenv("GRPC_AUTH_URL"),
+					UserUrl:  os.Getenv("GRPC_USER_URL"),
+					ShelfUrl: os.Getenv("GRPC_SHELF_URL"),
+					BookUrl:  os.Getenv("GRPC_BOOK_URL"),
+					OrderUrl: os.Getenv("GRPC_ORDER_URL"),
 				},
 
 				Jwt: Jwt{
@@ -173,24 +153,14 @@ func LoadConfig(path string) *Config {
 					RefreshDuration:  jwtRefreshDuration,
 				},
 
-				Sessions: Sessions{
-					Secret: os.Getenv("SESSIONS_SECRET"),
-					MaxAge: sessionsMaxAge,
-				},
-
-				Google: Google{
-					ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-					ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-				},
-
-				Facebook: Facebook{
-					ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-					ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-				},
-
 				Admin: Admin{
 					Username: os.Getenv("ADMIN_USERNAME"),
 					Password: os.Getenv("ADMIN_PASSWORD"),
+				},
+
+				Stripe: Stripe{
+					SecretKey:      os.Getenv("STRIPE_SECRET_KEY"),
+					EndPointSecret: os.Getenv("STRIPE_ENDPOINT_SECRET"),
 				},
 			}
 		} else {

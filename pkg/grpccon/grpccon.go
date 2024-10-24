@@ -5,6 +5,9 @@ import (
 	"log"
 	"net"
 
+	"github.com/kritAsawaniramol/book-store/module/auth/authPb"
+	"github.com/kritAsawaniramol/book-store/module/book/bookPb"
+	"github.com/kritAsawaniramol/book-store/module/shelf/shelfPb"
 	"github.com/kritAsawaniramol/book-store/module/user/userPb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -14,6 +17,9 @@ type (
 	//Creator class
 	GrpcClientFactoryHandler interface {
 		User() userPb.UserGrpcServiceClient
+		Auth() authPb.AuthGrpcServiceClient
+		Book() bookPb.BookGrpcServiceClient
+		Shelf() shelfPb.ShelfGrpcServiceClient
 	}
 
 	grpcClientFactory struct {
@@ -21,9 +27,24 @@ type (
 	}
 )
 
+// Shelf implements GrpcClientFactoryHandler.
+func (g *grpcClientFactory) Shelf() shelfPb.ShelfGrpcServiceClient {
+	return shelfPb.NewShelfGrpcServiceClient(g.client)
+}
+
+// Auth implements GrpcClientFactoryHandler.
+func (g *grpcClientFactory) Auth() authPb.AuthGrpcServiceClient {
+	return authPb.NewAuthGrpcServiceClient(g.client)
+}
+
 // User implements GrpcClientFactoryHandler.
 func (g *grpcClientFactory) User() userPb.UserGrpcServiceClient {
 	return userPb.NewUserGrpcServiceClient(g.client)
+}
+
+// Book implements GrpcClientFactoryHandler.
+func (g *grpcClientFactory) Book() bookPb.BookGrpcServiceClient {
+	return bookPb.NewBookGrpcServiceClient(g.client)
 }
 
 func NewGrpcServer(host string) (*grpc.Server, net.Listener) {
