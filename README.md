@@ -52,10 +52,6 @@ This software uses the following open source packages:
 
 ## Built With
 
-* ![JavaScript][JS-badge]
-* [![React][React-badge]][React-url]
-* [![Vite][Vite-badge]][Vite-url]
-* [![MUI][MUI-badge]][MUI-url]
 * [![Go][GO.dev]][GO-url]
 * [![Gorm][GORM.io]][GORM-url]
 * [![Gin-gonic][Gin-badge]][Gin-url]
@@ -87,17 +83,10 @@ MIT
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[JS-badge]: https://img.shields.io/badge/JavaScript-323330?style=for-the-badge&logo=javascript&logoColor=F7DF1E
 [Kubernetes-url]: https://kubernetes.io/
 [Kubernetes-badge]: https://img.shields.io/badge/kubernetes-326ce5.svg?&style=for-the-badge&logo=kubernetes&logoColor=white
 [Docker-url]: https://www.docker.com/
 [Docker-badge]: https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white
-[Vite-url]: https://vite.dev/
-[Vite-badge]: https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E
-[React-url]: https://react.dev/
-[React-badge]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
-[MUI-url]: https://mui.com/
-[MUI-badge]: https://img.shields.io/badge/Material%20UI-007FFF?style=for-the-badge&logo=mui&logoColor=white
 
 [GO-url]: https://go.dev/
 [GO.dev]: https://img.shields.io/badge/golang-00ADD8?&style=for-the-badge&logo=go&logoColor=white
