@@ -23,7 +23,8 @@ go.work.sum
 
 # env file
 .env
-env/prod/*
+env/prod/.env*
+env/dev/*
 
 asset/image/bookCover/*.*
 asset/book/*
