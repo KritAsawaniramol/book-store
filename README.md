@@ -61,7 +61,7 @@ This software uses the following open source packages:
 * [![Gin-gonic][Gin-badge]][Gin-url]
 * [![Postgresql][Postgresql-badge]][Postgresql-url]
 * [![Kafka][Kafka-badge]][Kafka-url]
-* [![Grpc][Grpc-badge]][Kafka-url]
+* [![Grpc][Grpc-badge]][Grpc-url]
 * [![Stripe][Stripe-badge]][Stripe-url]
 * [![Supabase][Supabase-badge]][Supabase-url]
 * [![Confluent][Confluent-badge]][Confluent-url]
