@@ -49,8 +49,7 @@ func resizeImage(file *multipart.FileHeader) (image.Image, string, error) {
 }
 
 func (c *contextWrapper) SaveImageFormFile(name string, dst string) (string, error) {
-	
-	
+
 	file, err := c.Context.FormFile(name)
 	if err != nil {
 		log.Printf("error: SaveImageFormFile: %s\n", err.Error())
@@ -78,8 +77,6 @@ func (c *contextWrapper) SaveImageFormFile(name string, dst string) (string, err
 		return "", errors.New("error: save image failed")
 	}
 	defer out.Close()
-
-
 
 	switch strings.ToLower(format) {
 	case "jpeg", "jpg":
@@ -123,12 +120,12 @@ func (c *contextWrapper) Bind(data any) error {
 	defer c.Context.Request.Body.Close()
 	if err := c.Context.Bind(data); err != nil {
 		log.Printf("Error: Bind data failed: %s", err.Error())
-		return errors.New("errors: bad requset")
+		return ErrBadReq
 	}
 
 	if err := c.validator.Struct(data); err != nil {
 		log.Printf("Error: Validate data failed: %s", err.Error())
-		return errors.New("errors: validate data failed")
+		return ErrValidateDataFail
 	}
 	return nil
 }

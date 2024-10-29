@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"time"
 
 	"github.com/kritAsawaniramol/book-store/module/auth/authPb"
 	"github.com/kritAsawaniramol/book-store/module/book/bookPb"
@@ -56,16 +57,20 @@ func NewGrpcServer(host string) (*grpc.Server, net.Listener) {
 	return grpcServer, listener
 }
 
+const maxRetries = 5
+const retryDelay = 2 * time.Second
+
 func NewGrpcClient(grpcUrl string) (GrpcClientFactoryHandler, error) {
 	creds := insecure.NewCredentials()
-
-	clientConn, err := grpc.NewClient(grpcUrl, grpc.WithTransportCredentials(creds))
-	if err != nil {
-		log.Printf("error: NewGrpcClient: %s\n", err.Error())
-		return nil, errors.New("error: grpc client connection failed")
+	for i := 0; i < maxRetries; i++ {
+		clientConn, err := grpc.NewClient(grpcUrl, grpc.WithTransportCredentials(creds))
+		if err == nil {
+			return &grpcClientFactory{
+				client: clientConn,
+			}, nil
+		}
+		log.Printf("Attempt %d: Failed to connect to gRPC server: %v", i+1, err)
+		time.Sleep(retryDelay)
 	}
-
-	return &grpcClientFactory{
-		client: clientConn,
-	}, nil
+	return nil, errors.New("error: grpc client connection failed")
 }

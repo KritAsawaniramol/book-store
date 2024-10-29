@@ -2,18 +2,17 @@ package authRepository
 
 import (
 	"context"
-	"errors"
 	"log"
 	"time"
 
 	"github.com/kritAsawaniramol/book-store/module/auth"
 	"github.com/kritAsawaniramol/book-store/module/user/userPb"
-	"github.com/kritAsawaniramol/book-store/pkg/grpccon"
 	"gorm.io/gorm"
 )
 
 type authRepositoryImpl struct {
-	db *gorm.DB
+	db                    *gorm.DB
+	userServiceGrpcClient userPb.UserGrpcServiceClient
 }
 
 // UpdateOneCredential implements AuthRepository.
@@ -21,7 +20,7 @@ func (a *authRepositoryImpl) UpdateOneCredentialByID(credentialID uint, in *auth
 	err := a.db.Model(&auth.Credential{}).Where("id = ?", credentialID).Updates(in).Error
 	if err != nil {
 		log.Printf("error: UpdateOneCredential: %s\n", err.Error())
-		return errors.New("error: update credential failed")
+		return auth.ErrUpdateCredential
 	}
 	return nil
 }
@@ -30,7 +29,7 @@ func (a *authRepositoryImpl) UpdateOneCredentialByID(credentialID uint, in *auth
 func (a *authRepositoryImpl) DeleteOneUserCredentialByID(credentialID uint) error {
 	if err := a.db.Delete(&auth.Credential{}, credentialID).Error; err != nil {
 		log.Printf("error: DeleteOneUserCredentialByID: %s\n", err.Error())
-		return errors.New("error: delete user credential failed")
+		return auth.ErrDeleteUserCredentialFail
 	}
 	return nil
 }
@@ -40,7 +39,7 @@ func (a *authRepositoryImpl) GetOneUserCredential(in *auth.Credential) (*auth.Cr
 	credential := &auth.Credential{}
 	if err := a.db.Where(&in).First(&credential).Error; err != nil {
 		log.Printf("error: GetOneUserCredential: %s\n", err.Error())
-		return nil, errors.New("error: credential not found")
+		return nil, auth.ErrCredentialNotFound
 	}
 	return credential, nil
 }
@@ -52,46 +51,36 @@ func (a *authRepositoryImpl) CreateOneUserCredential(in *auth.Credential) (uint,
 	err := a.db.WithContext(ctx).Create(in).Error
 	if err != nil {
 		log.Printf("error: CreateOneUserCredential: %s\n", err.Error())
-		return 0, errors.New("error: create user credential failed")
+		return 0, auth.ErrCreateUserCredential
 	}
 	return in.ID, nil
 }
 
-func (a *authRepositoryImpl) FindOneUserProfileToLogin(grpcUrl string, req *userPb.FindUserProfileToLoginReq) (*userPb.UserProfile, error) {
+func (a *authRepositoryImpl) FindOneUserProfileToLogin(req *userPb.FindUserProfileToLoginReq) (*userPb.UserProfile, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	conn, err := grpccon.NewGrpcClient(grpcUrl)
-	if err != nil {
-		return nil, err
-	}
-
-	userProfile, err := conn.User().FindUserProfileToLogin(ctx, req)
+	userProfile, err := a.userServiceGrpcClient.FindUserProfileToLogin(ctx, req)
 	if err != nil {
 		log.Printf("error: FindOneUserProfileToLogin: %s\n", err.Error())
-		return nil, errors.New("error: email or password are incorrect")
+		return nil, auth.ErrEmailOrPasswordIncorrect
 	}
 	return userProfile, nil
 }
 
 // FindOneUserProfileToRefresh implements AuthRepository.
-func (a *authRepositoryImpl) FindOneUserProfileToRefresh(grpcUrl string, req *userPb.FindOneUserProfileToRefreshReq) (*userPb.UserProfile, error) {
+func (a *authRepositoryImpl) FindOneUserProfileToRefresh(req *userPb.FindOneUserProfileToRefreshReq) (*userPb.UserProfile, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	conn, err := grpccon.NewGrpcClient(grpcUrl)
-	if err != nil {
-		return nil, err
-	}
-
-	userProfile, err := conn.User().FindOneUserProfileToRefresh(ctx, req)
+	userProfile, err := a.userServiceGrpcClient.FindOneUserProfileToRefresh(ctx, req)
 	if err != nil {
 		log.Printf("error: FindOneUserProfileToRefresh: %s\n", err.Error())
-		return nil, errors.New("error: user not found")
+		return nil, auth.ErrUserNotFound
 	}
 	return userProfile, nil
 }
 
-func NewAuthRepositoryImpl(db *gorm.DB) AuthRepository {
-	return &authRepositoryImpl{db: db}
+func NewAuthRepositoryImpl(db *gorm.DB, userServiceGrpcClient userPb.UserGrpcServiceClient) AuthRepository {
+	return &authRepositoryImpl{db: db, userServiceGrpcClient: userServiceGrpcClient}
 }

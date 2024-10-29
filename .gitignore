@@ -22,9 +22,16 @@ go.work
 go.work.sum
 
 # env file
-.env
-env/prod/*
+env/prod/.env*
+env/dev/*
 
 asset/image/bookCover/*.*
 asset/book/*
-build
+build/auth
+build/book
+build/order
+build/user
+build/shelf
+build/book-store-ingress.yml
+
+*.html
