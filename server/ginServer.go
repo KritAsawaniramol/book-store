@@ -48,7 +48,6 @@ func (g *ginServer) Start() {
 	// Define your allowed origins
 	allowedOrigins := []string{
 		"*",
-		// fmt.Sprintf("http://%s:%d", g.cfg.Client.Host, g.cfg.Client.Port),
 	}
 
 	// Configure CORS middleware with multiple allowed origins
@@ -83,8 +82,6 @@ func (g *ginServer) Start() {
 	case "order":
 		g.orderServer()
 	}
-
-	
 
 	serverUrl := fmt.Sprintf(":%d", g.cfg.App.Port)
 	srv := &http.Server{

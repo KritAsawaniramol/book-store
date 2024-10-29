@@ -11,14 +11,17 @@ import (
 )
 
 func (g *ginServer) authService() {
-	repo := authRepository.NewAuthRepositoryImpl(g.db)
+	userServiceGrpcClient, err := grpccon.NewGrpcClient(g.cfg.Grpc.UserUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
+	repo := authRepository.NewAuthRepositoryImpl(g.db, userServiceGrpcClient.User())
 	usecase := authUsecase.NewAuthUsecaseImpl(repo)
 	httpHandler := authHandler.NewAuthHttpHandlerImpl(g.cfg, usecase)
 	grpcHandler := authHandler.NewAuthGrpcHandlerImpl(usecase)
 
 	go func() {
 		grpcServer, listener := grpccon.NewGrpcServer(g.cfg.Grpc.AuthUrl)
-
 		authPb.RegisterAuthGrpcServiceServer(grpcServer, grpcHandler)
 		log.Printf("gRPC server listening on %s\n", g.cfg.Grpc.AuthUrl)
 		grpcServer.Serve(listener)

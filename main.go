@@ -19,6 +19,5 @@ func main() {
 
 	db := database.NewPostgresDatabase(cfg)
 	
-
 	server.NewGinServer(cfg, db.GetDb()).Start()
 }

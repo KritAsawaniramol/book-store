@@ -60,6 +60,7 @@ func (a *authHttpHandlerImpl) Logout(ctx *gin.Context) {
 
 // Login implements AuthHttpHandler.
 func (a *authHttpHandlerImpl) Login(ctx *gin.Context) {
+
 	wrapper := request.ContextWrapper(ctx)
 	req := &auth.LoginReq{}
 	err := wrapper.Bind(req)

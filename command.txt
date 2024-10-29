@@ -78,3 +78,7 @@ kubectl delete deployment --all --namespace=default
 
 Get a shell to the running container:
 kubectl exec --stdin --tty <Pod name> -- /bin/bash
+
+### Test
+❯ go test ./...
+❯ go test github.com/kritAsawaniramol/book-store/module/auth/authUsecase --cover

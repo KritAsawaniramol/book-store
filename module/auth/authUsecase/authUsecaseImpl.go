@@ -1,8 +1,6 @@
 package authUsecase
 
 import (
-	"errors"
-
 	"github.com/kritAsawaniramol/book-store/config"
 	"github.com/kritAsawaniramol/book-store/module/auth"
 	"github.com/kritAsawaniramol/book-store/module/auth/authPb"
@@ -21,7 +19,7 @@ func (a *authUsecaseImpl) AccessTokenSearch(accessToken string) (*authPb.AccessT
 	if err != nil {
 		return &authPb.AccessTokenSearchRes{IsValid: false}, err
 	} else if credential == nil {
-		return &authPb.AccessTokenSearchRes{IsValid: false}, errors.New("error: credential not found")
+		return &authPb.AccessTokenSearchRes{IsValid: false}, auth.ErrCredentialNotFound
 	}
 	return &authPb.AccessTokenSearchRes{IsValid: true}, nil
 }
@@ -33,7 +31,7 @@ func (a *authUsecaseImpl) RefreshToken(cfg *config.Config, req *auth.RefreshToke
 		return nil, err
 	}
 
-	userProfile, err := a.authRepository.FindOneUserProfileToRefresh(cfg.Grpc.UserUrl, &userPb.FindOneUserProfileToRefreshReq{
+	userProfile, err := a.authRepository.FindOneUserProfileToRefresh(&userPb.FindOneUserProfileToRefreshReq{
 		UserId: uint64(claims.UserID),
 	})
 	if err != nil {
@@ -82,7 +80,6 @@ func (a *authUsecaseImpl) Logout(req *auth.LogoutReq) error {
 // Login implements AuthUsecase.
 func (a *authUsecaseImpl) Login(cfg *config.Config, req *auth.LoginReq) (*auth.LoginRes, error) {
 	userProfile, err := a.authRepository.FindOneUserProfileToLogin(
-		cfg.Grpc.UserUrl,
 		&userPb.FindUserProfileToLoginReq{
 			Username: req.Username,
 			Password: req.Password,
