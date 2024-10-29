@@ -39,4 +39,5 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         push: true
+        file: ./build/Dockerfile 
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/book-store:latest
