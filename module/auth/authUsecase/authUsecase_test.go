@@ -77,7 +77,7 @@ func TestRefreshToken(t *testing.T) {
 
 	usecase := authUsecase.NewAuthUsecaseImpl(repoMock)
 	t.Run("success", func(t *testing.T) {
-		repoMock.On("FindOneUserProfileToRefresh", cfg, mock.AnythingOfType("*userPb.FindOneUserProfileToRefreshReq")).
+		repoMock.On("FindOneUserProfileToRefresh",mock.AnythingOfType("*userPb.FindOneUserProfileToRefreshReq")).
 			Return(mockUserProfile, nil)
 
 		repoMock.On("UpdateOneCredentialByID", uint(1), mock.AnythingOfType("*auth.Credential")).
@@ -114,7 +114,7 @@ func TestRefreshToken(t *testing.T) {
 	t.Run("FindOneUserProfileToRefresh fail", func(t *testing.T) {
 		repoMock.ExpectedCalls = nil
 
-		repoMock.On("FindOneUserProfileToRefresh", cfg, mock.AnythingOfType("*userPb.FindOneUserProfileToRefreshReq")).
+		repoMock.On("FindOneUserProfileToRefresh", mock.AnythingOfType("*userPb.FindOneUserProfileToRefreshReq")).
 			Return(nil, auth.ErrUserNotFound)
 
 		repoMock.AssertNotCalled(t, "UpdateOneCredentialByID")
@@ -132,7 +132,7 @@ func TestRefreshToken(t *testing.T) {
 	t.Run("UpdateOneCredentialByID fail", func(t *testing.T) {
 		repoMock.ExpectedCalls = nil
 
-		repoMock.On("FindOneUserProfileToRefresh", cfg, mock.AnythingOfType("*userPb.FindOneUserProfileToRefreshReq")).
+		repoMock.On("FindOneUserProfileToRefresh",  mock.AnythingOfType("*userPb.FindOneUserProfileToRefreshReq")).
 			Return(mockUserProfile, nil)
 
 		repoMock.On("UpdateOneCredentialByID", uint(1), mock.AnythingOfType("*auth.Credential")).
@@ -152,7 +152,7 @@ func TestRefreshToken(t *testing.T) {
 	t.Run("GetOneUserCredential fail", func(t *testing.T) {
 		repoMock.ExpectedCalls = nil
 
-		repoMock.On("FindOneUserProfileToRefresh", cfg, mock.AnythingOfType("*userPb.FindOneUserProfileToRefreshReq")).
+		repoMock.On("FindOneUserProfileToRefresh",  mock.AnythingOfType("*userPb.FindOneUserProfileToRefreshReq")).
 			Return(mockUserProfile, nil)
 
 		repoMock.On("UpdateOneCredentialByID", uint(1), mock.AnythingOfType("*auth.Credential")).
@@ -262,7 +262,6 @@ func TestLogin(t *testing.T) {
 
 			repoMock.On(
 				"FindOneUserProfileToLogin",
-				cfg,
 				mock.AnythingOfType("*userPb.FindUserProfileToLoginReq"),
 			).Return(mockUserProfile, nil)
 
@@ -295,7 +294,6 @@ func TestLogin(t *testing.T) {
 		repoMock.ExpectedCalls = nil
 		repoMock.On(
 			"FindOneUserProfileToLogin",
-			cfg,
 			mock.AnythingOfType("*userPb.FindUserProfileToLoginReq"),
 		).Return(nil, errors.New("error: email or password are incorrect"))
 
@@ -314,7 +312,6 @@ func TestLogin(t *testing.T) {
 
 		repoMock.On(
 			"FindOneUserProfileToLogin",
-			cfg,
 			mock.AnythingOfType("*userPb.FindUserProfileToLoginReq"),
 		).Return(mockUserProfile, nil)
 
@@ -338,7 +335,6 @@ func TestLogin(t *testing.T) {
 
 		repoMock.On(
 			"FindOneUserProfileToLogin",
-			cfg,
 			mock.AnythingOfType("*userPb.FindUserProfileToLoginReq"),
 		).Return(mockUserProfile, nil)
 
