@@ -148,7 +148,7 @@ jobs:
           KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
           KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
         run: |
-          kubectl create secret generic order-secret \
+          kubectl create secret generic shelf-secret \
             --from-literal=DB_HOST="$DB_HOST" \
             --from-literal=DB_USER="$DB_USER" \
             --from-literal=DB_PASSWORD="$DB_PASSWORD" \
@@ -172,7 +172,7 @@ jobs:
           ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
         run: |
-          kubectl create secret generic order-secret \
+          kubectl create secret generic user-secret \
             --from-literal=DB_HOST="$DB_HOST" \
             --from-literal=DB_USER="$DB_USER" \
             --from-literal=DB_PASSWORD="$DB_PASSWORD" \
