@@ -10,17 +10,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-
-    - name: code checkout
-      uses: actions/checkout@v2
-
-    - name: install the gcloud cli
-      uses: google-github-actions/setup-gcloud@v0
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v2'
       with:
-        project_id: ${{ secrets.GKE_PROJECT }}
-        service_account_key: ${{ secrets.GKE_SA_KEY }}
-        install_components: 'gke-gcloud-auth-plugin'
-        export_default_credentials: true
+        project_id: 'my-project'
+        workload_identity_provider: 'projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider'
+
+    - id: 'get-credentials'
+      uses: 'google-github-actions/get-gke-credentials@v2'
+      with:
+        cluster_name: 'my-cluster'
+        location: 'us-central1-a'
+
+    # The KUBECONFIG env var is automatically exported and picked up by kubectl.
+    - id: 'get-pods'
+      run: 'kubectl get pods'
 
     # - name: build and push the docker image
     #   env:
