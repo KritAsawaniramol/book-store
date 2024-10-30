@@ -87,7 +87,8 @@ jobs:
             --from-literal=DB_PASSWORD="$DB_PASSWORD" \
             --from-literal=DB_NAME="$DB_NAME" \
             --from-literal=JWT_ACCESS_SECRET_KEY="$JWT_ACCESS_SECRET_KEY" \
-            --from-literal=JWT_REFRESH_SECRET_KEY="$JWT_REFRESH_SECRET_KEY" 
+            --from-literal=JWT_REFRESH_SECRET_KEY="$JWT_REFRESH_SECRET_KEY" \
+            -o yaml --dry-run=client | kubectl apply -f -
             
       - name: Create book secrets
         env:
@@ -100,4 +101,5 @@ jobs:
             --from-literal=DB_HOST="$DB_HOST" \
             --from-literal=DB_USER="$DB_USER" \
             --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-            --from-literal=DB_NAME="$DB_NAME"     
+            --from-literal=DB_NAME="$DB_NAME" \
+            -o yaml --dry-run=client | kubectl apply -f -
