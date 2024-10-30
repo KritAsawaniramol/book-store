@@ -34,24 +34,24 @@ spec:
           - name: DB_HOST
             valueFrom:
               secretKeyRef:
-                name: auth-serect
+                name: auth-secret
                 key: DB_HOST
           - name: DB_PORT
             value: "5432"
           - name: DB_USER
             valueFrom:
               secretKeyRef:
-                name: auth-serect
+                name: auth-secret
                 key: DB_USER
           - name: DB_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: auth-serect
+                name: auth-secret
                 key: DB_PASSWORD
           - name: DB_NAME
             valueFrom:
               secretKeyRef:
-                name: auth-serect
+                name: auth-secret
                 key: DB_NAME
           - name: GRPC_BOOK_URL
             value: "34.118.225.142:3000"
@@ -68,11 +68,11 @@ spec:
           - name: JWT_ACCESS_SECRET_KEY
             valueFrom:
               secretKeyRef:
-                name: auth-serect
+                name: auth-secret
                 key: JWT_ACCESS_SECRET_KEY
           - name: JWT_REFRESH_SECRET_KEY
             valueFrom:
               secretKeyRef:
-                name: auth-serect
+                name: auth-secret
                 key: JWT_REFRESH_SECRET_KEY
 
