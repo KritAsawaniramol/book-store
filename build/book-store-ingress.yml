@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: book-store-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/app-root: /
+    nginx.ingress.kubernetes.io/proxy-body-size: 999m
+spec:
+  ingressClassName: nginx
+  rules:
+   - http:
+      paths:
+      - path: /auth_v1
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-service # have to match with metadata.name in auth-service.yml
+            port:
+              number: 8080 # Port ที่ จะต่อเข้า Service
+              # port 3000 ไม่ต้องเพราะใช่คุยกันแค่ภายใน
+      - path: /user_v1
+        pathType: Prefix
+        backend:
+          service:
+            name: user-service # have to match with metadata.name in user-service.yml
+            port:
+              number: 8080 # Port ที่ จะต่อเข้า Service
+      - path: /book_v1
+        pathType: Prefix
+        backend:
+          service:
+            name: book-service # have to match with metadata.name in book-service.yml
+            port:
+              number: 8080 # Port ที่ จะต่อเข้า Service
+      - path: /shelf_v1
+        pathType: Prefix
+        backend:
+          service:
+            name: shelf-service # have to match with metadata.name in shelf-service.yml
+            port:
+              number: 8080 # Port ที่ จะต่อเข้า Service
+      - path: /order_v1
+        pathType: Prefix
+        backend:
+          service:
+            name: order-service # have to match with metadata.name in order-service.yml
+            port:
+              number: 8080 # Port ที่ จะต่อเข้า Service
