@@ -16,7 +16,7 @@ on:
         branches: ["main"]
 
 env:
-  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  PROJECT_ID: book-s-439214
   GKE_CLUSTER:  ${{ secrets.GKE_CLUSTER }} # Add your cluster name here.
   GKE_ZONE:   ${{ secrets.GKE_ZONE }} # Add your cluster zone here.
 #   DEPLOYMENT_NAME: gke-test # Add your deployment name here.
@@ -36,7 +36,7 @@ jobs:
       - uses: google-github-actions/setup-gcloud@1bee7de035d65ec5da40a31f8589e240eba8fde5
         with:
           service_account_key: ${{ secrets.GKE_SA_KEY }}
-          project_id: ${{ env.PROJECT_ID }}
+          project_id: book-s-439214
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
