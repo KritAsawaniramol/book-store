@@ -67,7 +67,7 @@ jobs:
           kubectl apply -f ./build/order/order-service.yml
 
       - name: Apply configmap
-        run: kubectl apply -f ./env/prod/.env
+        run: kubectl create configmap book-store-env --from-env-file=./env/prod/.env -o yaml --dry-run=client | kubectl apply -f -
 
       - name: Apply ingress
         run: kubectl apply -f ./build/book-store-ingress.yml
