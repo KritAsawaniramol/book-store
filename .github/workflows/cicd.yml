@@ -137,3 +137,51 @@ jobs:
             --from-literal=KAFKA_API_KEY="$KAFKA_API_KEY" \
             --from-literal=KAFKA_API_SECRET="$KAFKA_API_SECRET" \
             -o yaml --dry-run=client | kubectl apply -f -
+
+      - name: Create shelf secrets
+        env:
+          DB_HOST: ${{ secrets.SHELF_DB_HOST }}
+          DB_USER: ${{ secrets.SHELF_DB_USER }}
+          DB_PASSWORD: ${{ secrets.SHELF_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.SHELF_DB_NAME }}
+          KAFKA_URL: ${{ secrets.KAFKA_URL }}
+          KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
+          KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
+        run: |
+          kubectl create secret generic order-secret \
+            --from-literal=DB_HOST="$DB_HOST" \
+            --from-literal=DB_USER="$DB_USER" \
+            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+            --from-literal=DB_NAME="$DB_NAME" \
+            --from-literal=KAFKA_URL="$KAFKA_URL" \
+            --from-literal=KAFKA_API_KEY="$KAFKA_API_KEY" \
+            --from-literal=KAFKA_API_SECRET="$KAFKA_API_SECRET" \
+            -o yaml --dry-run=client | kubectl apply -f -
+
+      - name: Create user secrets
+        env:
+          DB_HOST: ${{ secrets.USER_DB_HOST }}
+          DB_USER: ${{ secrets.USER_DB_USER }}
+          DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.USER_DB_NAME }}
+          KAFKA_URL: ${{ secrets.KAFKA_URL }}
+          KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
+          KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_ENDPOINT_SECRET: ${{ secrets.STRIPE_ENDPOINT_SECRET }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          kubectl create secret generic order-secret \
+            --from-literal=DB_HOST="$DB_HOST" \
+            --from-literal=DB_USER="$DB_USER" \
+            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+            --from-literal=DB_NAME="$DB_NAME" \
+            --from-literal=KAFKA_URL="$KAFKA_URL" \
+            --from-literal=KAFKA_API_KEY="$KAFKA_API_KEY" \
+            --from-literal=KAFKA_API_SECRET="$KAFKA_API_SECRET" \
+            --from-literal=STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" \
+            --from-literal=STRIPE_ENDPOINT_SECRET="$STRIPE_ENDPOINT_SECRET" \
+            --from-literal=ADMIN_USERNAME="$ADMIN_USERNAME" \
+            --from-literal=ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            -o yaml --dry-run=client | kubectl apply -f -
