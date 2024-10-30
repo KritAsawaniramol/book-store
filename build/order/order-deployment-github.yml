@@ -55,6 +55,21 @@ spec:
                 key: DB_NAME
           - name: KAFKA_GROUP_ID
             value: orderConsumer
+          - name: KAFKA_URL
+            valueFrom:
+              secretKeyRef:
+                name: order-secret
+                key: KAFKA_URL
+          - name: KAFKA_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: order-secret
+                key: KAFKA_API_KEY
+          - name: KAFKA_API_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: order-secret
+                key: KAFKA_API_SECRET
           - name: GRPC_AUTH_URL
             value: "34.118.225.131:3000"
             # value: "10.110.232.72:3000"

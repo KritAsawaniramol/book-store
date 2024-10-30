@@ -103,3 +103,37 @@ jobs:
             --from-literal=DB_PASSWORD="$DB_PASSWORD" \
             --from-literal=DB_NAME="$DB_NAME" \
             -o yaml --dry-run=client | kubectl apply -f -
+
+      - name: Create book secrets
+        env:
+          DB_HOST: ${{ secrets.BOOK_DB_HOST }}
+          DB_USER: ${{ secrets.BOOK_DB_USER }}
+          DB_PASSWORD: ${{ secrets.BOOK_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.BOOK_DB_NAME }}
+        run: |
+          kubectl create secret generic book-secret \
+            --from-literal=DB_HOST="$DB_HOST" \
+            --from-literal=DB_USER="$DB_USER" \
+            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+            --from-literal=DB_NAME="$DB_NAME" \
+            -o yaml --dry-run=client | kubectl apply -f -
+      
+      - name: Create order secrets
+        env:
+          DB_HOST: ${{ secrets.ORDER_DB_HOST }}
+          DB_USER: ${{ secrets.ORDER_DB_USER }}
+          DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.ORDER_DB_NAME }}
+          KAFKA_URL: ${{ secrets.KAFKA_URL }}
+          KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
+          KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
+        run: |
+          kubectl create secret generic order-secret \
+            --from-literal=DB_HOST="$DB_HOST" \
+            --from-literal=DB_USER="$DB_USER" \
+            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+            --from-literal=DB_NAME="$DB_NAME" \
+            --from-literal=KAFKA_URL="$KAFKA_URL" \
+            --from-literal=KAFKA_API_KEY="$KAFKA_API_KEY" \
+            --from-literal=KAFKA_API_SECRET="$KAFKA_API_SECRET" \
+            -o yaml --dry-run=client | kubectl apply -f -
