@@ -32,6 +32,19 @@ jobs:
 
       - name: Test
         run: go test -v ./...
+        
+      # Setup gcloud CLI
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GKE_SA_KEY }}"
+
+      # Get the GKE credentials so we can deploy to the cluster
+      - name: Set up GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}  
 
       # Configure Docker to use the gcloud command-line tool as a credential
       # helper for authentication
@@ -53,18 +66,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.action == 'closed' && github.event.pull_request.merged == true
     needs: ci # Ensure CD only runs after CI
     steps:
-      # Setup gcloud CLI
-      - id: "auth"
-        uses: "google-github-actions/auth@v2"
-        with:
-          credentials_json: "${{ secrets.GKE_SA_KEY }}"
-
-      # Get the GKE credentials so we can deploy to the cluster
-      - name: Set up GKE credentials
-        uses: google-github-actions/get-gke-credentials@v2
-        with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_ZONE }}
+      
 
       # Push the Docker image to Google Container Registry
       - name: Publish
