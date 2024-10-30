@@ -51,13 +51,21 @@ jobs:
           --build-arg GITHUB_SHA="$GITHUB_SHA" \
           --build-arg GITHUB_REF="$GITHUB_REF" \
           .
-    # # Push the Docker image to Google Container Registry
-    # - name: Publish
-    #   run: |-
-    #     docker push "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG"
 
-    # # Deploy the Docker image to the GKE cluster
-    # - name: Deploy
-    #   run: |-
-    #     kubectl apply -f deploy.yml
-    #     kubectl get pods
+    # Push the Docker image to Google Container Registry
+    - name: Publish
+      run: |-
+        docker push "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG"
+
+    # Deploy the Docker image to the GKE cluster
+    - name: Deploy
+      run: |-
+        kubectl apply -f ./build/auth/auth-service.yml
+        kubectl apply -f ./build/user/user-service.yml
+        kubectl apply -f ./build/book/book-service.yml
+        kubectl apply -f ./build/shelf/shelf-service.yml
+        kubectl apply -f ./build/order/order-service.yml
+        kubectl create configmap book-store-env --from-file=./env/prod/.env
+        kubectl get services
+        kubectl get configmap
+

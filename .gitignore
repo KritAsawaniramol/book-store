@@ -27,11 +27,11 @@ env/dev/.env*
 
 asset/image/bookCover/*.*
 asset/book/*
-build/auth
-build/book
-build/order
-build/user
-build/shelf
+build/auth/*deployment*
+build/book/*deployment*
+build/order/*deployment*
+build/user/*deployment*
+build/shelf/*deployment*
 build/book-store-ingress.yml
 
 *.html
