@@ -2,22 +2,24 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main # Deploy on main branch merges
   pull_request:
-    branches: ["main"]
+    branches:
+      - dev
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
-  GKE_CLUSTER: cluster-1 # cluster name
-  GKE_ZONE: asia-southeast1-b # cluster zone
-  IMAGE: book-store # image name
-  IMAGE_TAG: latest # image tag
-  GAR_ZONE: asia-southeast1 # artifact registry zone
-  GAR_REPO: book-store # artifact registry repository
+  GKE_CLUSTER: cluster-1 # Cluster name
+  GKE_ZONE: asia-southeast1-b # Cluster zone
+  IMAGE: book-store # Image name
+  IMAGE_TAG: latest # Image tag
+  GAR_ZONE: asia-southeast1 # Artifact registry zone
+  GAR_REPO: book-store # Artifact registry repository
 
 jobs:
-  setup-build-publish-deploy:
-    name: Setup, Build, Publish, and Deploy
+  ci:
+    name: CI Setup, Build
     runs-on: ubuntu-latest
     environment: production
 
@@ -25,172 +27,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Setup gcloud CLI
-      - id: "auth"
-        uses: "google-github-actions/auth@v2"
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          credentials_json: "${{ secrets.GKE_SA_KEY }}"
+          go-version: "1.22.5"
 
-      # Configure Docker to use the gcloud command-line tool as a credential
-      # helper for authentication
+      - name: Test
+        run: go test -v ./...
+
+      # Configure Docker to use the gcloud command-line tool for authentication
       - name: Docker configuration
-        run: |-
+        run: |
           gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://$GAR_ZONE-docker.pkg.dev
-
-      # Get the GKE credentials so we can deploy to the cluster
-      - name: Set up GKE credentials
-        uses: google-github-actions/get-gke-credentials@v2
-        with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_ZONE }}
 
       # Build the Docker image
       - name: Build
-        run: |-
+        run: |
           docker build --platform linux/amd64 -f build/Dockerfile -t "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG" \
-            --build-arg GITHUB_SHA="$GITHUB_SHA" \
-            --build-arg GITHUB_REF="$GITHUB_REF" \
-            .
-
-      # Push the Docker image to Google Container Registry
-      - name: Publish
-        run: |-
-          docker push "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG"
-
-      # Deploy the Docker image to the GKE cluster
-      - name: Apply service
-        run: |-
-          kubectl apply -f ./build/auth/auth-service.yml
-          kubectl apply -f ./build/user/user-service.yml
-          kubectl apply -f ./build/book/book-service.yml
-          kubectl apply -f ./build/shelf/shelf-service.yml
-          kubectl apply -f ./build/order/order-service.yml
-
-      - name: Apply configmap
-        run: kubectl create configmap book-store-env --from-env-file=./env/prod/.env -o yaml --dry-run=client | kubectl apply -f -
-
-      - name: Apply ingress
-        run: kubectl apply -f ./build/book-store-ingress.yml
-
-      - name: Create auth secrets
-        env:
-          DB_HOST: ${{ secrets.AUTH_DB_HOST }}
-          DB_USER: ${{ secrets.AUTH_DB_USER }}
-          DB_PASSWORD: ${{ secrets.AUTH_DB_PASSWORD }}
-          DB_NAME: ${{ secrets.AUTH_DB_NAME }}
-          JWT_ACCESS_SECRET_KEY: ${{ secrets.JWT_ACCESS_SECRET_KEY }}
-          JWT_REFRESH_SECRET_KEY: ${{ secrets.JWT_REFRESH_SECRET_KEY }}
-        run: |
-          kubectl create secret generic auth-secret \
-            --from-literal=DB_HOST="$DB_HOST" \
-            --from-literal=DB_USER="$DB_USER" \
-            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-            --from-literal=DB_NAME="$DB_NAME" \
-            --from-literal=JWT_ACCESS_SECRET_KEY="$JWT_ACCESS_SECRET_KEY" \
-            --from-literal=JWT_REFRESH_SECRET_KEY="$JWT_REFRESH_SECRET_KEY" \
-            -o yaml --dry-run=client | kubectl apply -f -
-            
-      - name: Create book secrets
-        env:
-          DB_HOST: ${{ secrets.BOOK_DB_HOST }}
-          DB_USER: ${{ secrets.BOOK_DB_USER }}
-          DB_PASSWORD: ${{ secrets.BOOK_DB_PASSWORD }}
-          DB_NAME: ${{ secrets.BOOK_DB_NAME }}
-        run: |
-          kubectl create secret generic book-secret \
-            --from-literal=DB_HOST="$DB_HOST" \
-            --from-literal=DB_USER="$DB_USER" \
-            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-            --from-literal=DB_NAME="$DB_NAME" \
-            -o yaml --dry-run=client | kubectl apply -f -
-
-      - name: Create book secrets
-        env:
-          DB_HOST: ${{ secrets.BOOK_DB_HOST }}
-          DB_USER: ${{ secrets.BOOK_DB_USER }}
-          DB_PASSWORD: ${{ secrets.BOOK_DB_PASSWORD }}
-          DB_NAME: ${{ secrets.BOOK_DB_NAME }}
-        run: |
-          kubectl create secret generic book-secret \
-            --from-literal=DB_HOST="$DB_HOST" \
-            --from-literal=DB_USER="$DB_USER" \
-            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-            --from-literal=DB_NAME="$DB_NAME" \
-            -o yaml --dry-run=client | kubectl apply -f -
-      
-      - name: Create order secrets
-        env:
-          DB_HOST: ${{ secrets.ORDER_DB_HOST }}
-          DB_USER: ${{ secrets.ORDER_DB_USER }}
-          DB_PASSWORD: ${{ secrets.ORDER_DB_PASSWORD }}
-          DB_NAME: ${{ secrets.ORDER_DB_NAME }}
-          KAFKA_URL: ${{ secrets.KAFKA_URL }}
-          KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
-          KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
-        run: |
-          kubectl create secret generic order-secret \
-            --from-literal=DB_HOST="$DB_HOST" \
-            --from-literal=DB_USER="$DB_USER" \
-            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-            --from-literal=DB_NAME="$DB_NAME" \
-            --from-literal=KAFKA_URL="$KAFKA_URL" \
-            --from-literal=KAFKA_API_KEY="$KAFKA_API_KEY" \
-            --from-literal=KAFKA_API_SECRET="$KAFKA_API_SECRET" \
-            -o yaml --dry-run=client | kubectl apply -f -
-
-      - name: Create shelf secrets
-        env:
-          DB_HOST: ${{ secrets.SHELF_DB_HOST }}
-          DB_USER: ${{ secrets.SHELF_DB_USER }}
-          DB_PASSWORD: ${{ secrets.SHELF_DB_PASSWORD }}
-          DB_NAME: ${{ secrets.SHELF_DB_NAME }}
-          KAFKA_URL: ${{ secrets.KAFKA_URL }}
-          KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
-          KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
-        run: |
-          kubectl create secret generic shelf-secret \
-            --from-literal=DB_HOST="$DB_HOST" \
-            --from-literal=DB_USER="$DB_USER" \
-            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-            --from-literal=DB_NAME="$DB_NAME" \
-            --from-literal=KAFKA_URL="$KAFKA_URL" \
-            --from-literal=KAFKA_API_KEY="$KAFKA_API_KEY" \
-            --from-literal=KAFKA_API_SECRET="$KAFKA_API_SECRET" \
-            -o yaml --dry-run=client | kubectl apply -f -
-
-      - name: Create user secrets
-        env:
-          DB_HOST: ${{ secrets.USER_DB_HOST }}
-          DB_USER: ${{ secrets.USER_DB_USER }}
-          DB_PASSWORD: ${{ secrets.USER_DB_PASSWORD }}
-          DB_NAME: ${{ secrets.USER_DB_NAME }}
-          KAFKA_URL: ${{ secrets.KAFKA_URL }}
-          KAFKA_API_KEY: ${{ secrets.KAFKA_API_KEY }}
-          KAFKA_API_SECRET: ${{ secrets.KAFKA_API_SECRET }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_ENDPOINT_SECRET: ${{ secrets.STRIPE_ENDPOINT_SECRET }}
-          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-        run: |
-          kubectl create secret generic user-secret \
-            --from-literal=DB_HOST="$DB_HOST" \
-            --from-literal=DB_USER="$DB_USER" \
-            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
-            --from-literal=DB_NAME="$DB_NAME" \
-            --from-literal=KAFKA_URL="$KAFKA_URL" \
-            --from-literal=KAFKA_API_KEY="$KAFKA_API_KEY" \
-            --from-literal=KAFKA_API_SECRET="$KAFKA_API_SECRET" \
-            --from-literal=STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" \
-            --from-literal=STRIPE_ENDPOINT_SECRET="$STRIPE_ENDPOINT_SECRET" \
-            --from-literal=ADMIN_USERNAME="$ADMIN_USERNAME" \
-            --from-literal=ADMIN_PASSWORD="$ADMIN_PASSWORD" \
-            -o yaml --dry-run=client | kubectl apply -f -
-
-      - name: Apply deployment
-        run: |- 
-            kubectl apply -f ./build/auth/auth-deployment-github.yml
-            kubectl apply -f ./build/user/user-deployment-github.yml
-            kubectl apply -f ./build/book/book-deployment-github.yml
-            kubectl apply -f ./build/shelf/shelf-deployment-github.yml
-            kubectl apply -f ./build/order/order-deployment-github.yml
-            kubectl get pods
+            --build-arg

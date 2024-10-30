@@ -32,5 +32,5 @@ build/book/*deployment.yml
 build/order/*deployment.yml
 build/user/*deployment.yml
 build/shelf/*deployment.yml
-
+.github/workflows/cicd_backup.yml
 *.html
