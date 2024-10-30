@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shelf-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shelf
+  template:
+    metadata:
+      labels:
+        app: shelf
+    spec: 
+      volumes:
+      - name: book-store-env
+        configMap: # map to configmap
+          name: book-store-env
+      containers:
+      - name: shelf
+        image: krit23448/book-store:latest
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        - containerPort: 3000
+          protocol: TCP
+        volumeMounts: # mounts volume to contrainer, copy files in book-store-env to /etc/env
+        - name: book-store-env
+          mountPath: /etc/env
+        env: # set more env, อะไรที่เปลี่ยนบ่อยๆ set ในนี้ได้
+          - name: APP_NAME
+            value: "shelf"
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: shelf-secret
+                key: DB_HOST
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: shelf-secret
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: shelf-secret
+                key: DB_PASSWORD
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: shelf-secret
+                key: DB_NAME
+          - name: KAFKA_GROUP_ID
+            value: shelfConsumer
+          - name: GRPC_AUTH_URL
+            value: "34.118.225.131:3000"
+            # value: "10.110.232.72:3000"
+          - name: GRPC_USER_URL
+            value: "34.118.238.201:3000"
+            # value: "10.102.66.167:3000"
+            # value: "10.102.66.167:3000"
+          - name: GRPC_BOOK_URL
+            value: "34.118.225.142:3000"
+            # value: "10.103.191.62:3000"
+          - name: GRPC_ORDER_URL
+            value: "34.118.236.125:3000"
+            # value: "10.101.160.209:3000"

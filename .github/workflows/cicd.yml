@@ -2,14 +2,14 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
-  GKE_CLUSTER: cluster-1    # cluster name
-  GKE_ZONE: asia-southeast1-b	   # cluster zone
+  GKE_CLUSTER: cluster-1 # cluster name
+  GKE_ZONE: asia-southeast1-b # cluster zone
   IMAGE: book-store # image name
   IMAGE_TAG: latest # image tag
   GAR_ZONE: asia-southeast1 # artifact registry zone
@@ -22,50 +22,70 @@ jobs:
     environment: production
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # Setup gcloud CLI
-    - id: 'auth'
-      uses: 'google-github-actions/auth@v2'
-      with:
-        credentials_json: '${{ secrets.GKE_SA_KEY }}'
+      # Setup gcloud CLI
+      - id: "auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GKE_SA_KEY }}"
 
-    # Configure Docker to use the gcloud command-line tool as a credential
-    # helper for authentication
-    - name: Docker configuration
-      run: |-
-        gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://$GAR_ZONE-docker.pkg.dev
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - name: Docker configuration
+        run: |-
+          gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://$GAR_ZONE-docker.pkg.dev
 
-    # Get the GKE credentials so we can deploy to the cluster
-    - name: Set up GKE credentials
-      uses: google-github-actions/get-gke-credentials@v2
-      with:
-        cluster_name: ${{ env.GKE_CLUSTER }}
-        location: ${{ env.GKE_ZONE }}
+      # Get the GKE credentials so we can deploy to the cluster
+      - name: Set up GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
 
-    # Build the Docker image
-    - name: Build
-      run: |-
-        docker build --platform linux/amd64 -f build/Dockerfile -t "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG" \
-          --build-arg GITHUB_SHA="$GITHUB_SHA" \
-          --build-arg GITHUB_REF="$GITHUB_REF" \
-          .
+      # Build the Docker image
+      - name: Build
+        run: |-
+          docker build --platform linux/amd64 -f build/Dockerfile -t "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG" \
+            --build-arg GITHUB_SHA="$GITHUB_SHA" \
+            --build-arg GITHUB_REF="$GITHUB_REF" \
+            .
 
-    # Push the Docker image to Google Container Registry
-    - name: Publish
-      run: |-
-        docker push "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG"
+      # Push the Docker image to Google Container Registry
+      - name: Publish
+        run: |-
+          docker push "$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$IMAGE:$IMAGE_TAG"
 
-    # Deploy the Docker image to the GKE cluster
-    - name: Deploy
-      run: |-
-        kubectl apply -f ./build/auth/auth-service.yml
-        kubectl apply -f ./build/user/user-service.yml
-        kubectl apply -f ./build/book/book-service.yml
-        kubectl apply -f ./build/shelf/shelf-service.yml
-        kubectl apply -f ./build/order/order-service.yml
-        kubectl create configmap book-store-env --from-file=./env/prod/.env
-        kubectl get services
-        kubectl get configmap
+      # Deploy the Docker image to the GKE cluster
+      - name: Apply service
+        run: |-
+          kubectl apply -f ./build/auth/auth-service.yml
+          kubectl apply -f ./build/user/user-service.yml
+          kubectl apply -f ./build/book/book-service.yml
+          kubectl apply -f ./build/shelf/shelf-service.yml
+          kubectl apply -f ./build/order/order-service.yml
 
+      - name: Apply configmap
+        run: kubectl apply -f book-store-env --from-file=./env/prod/.env
+
+      - name: Apply ingress
+        run: kubectl apply -f ./build/book-store-ingress.yml
+
+      - name: Create auth secrets
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          JWT_ACCESS_SECRET_KEY: ${{ secrets.JWT_ACCESS_SECRET_KEY }}
+          JWT_REFRESH_SECRET_KEY: ${{ secrets.JWT_REFRESH_SECRET_KEY }}
+        run: |
+          kubectl create secret generic auth-secret \
+            --from-literal=DB_HOST="$DB_HOST" \
+            --from-literal=DB_USER="$DB_USER" \
+            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+            --from-literal=DB_NAME="$DB_NAME" \
+            --from-literal=JWT_ACCESS_SECRET_KEY="$JWT_ACCESS_SECRET_KEY" \
+            --from-literal=JWT_REFRESH_SECRET_KEY="$JWT_REFRESH_SECRET_KEY" 
+    
