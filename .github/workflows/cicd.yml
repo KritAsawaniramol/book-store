@@ -41,7 +41,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.action == 'closed' && github.event.pull_request.merged == true
     needs: ci # Ensure CD only runs after CI
     steps:
-        
+      - name: Checkout
+        uses: actions/checkout@v4  
+
       # Setup gcloud CLI
       - id: "auth"
         uses: "google-github-actions/auth@v2"
