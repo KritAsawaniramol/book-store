@@ -32,6 +32,15 @@ jobs:
 
       - name: Test
         run: go test -v ./...
+
+      
+
+  cd:
+    name: CD Publish, Deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    needs: ci # Ensure CD only runs after CI
+    steps:
         
       # Setup gcloud CLI
       - id: "auth"
@@ -59,14 +68,6 @@ jobs:
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             .
-
-  cd:
-    name: CD Publish, Deploy
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    needs: ci # Ensure CD only runs after CI
-    steps:
-      
 
       # Push the Docker image to Google Container Registry
       - name: Publish
