@@ -2,9 +2,9 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 env:
   PROJECT_ID: ${{ secrets.GKE_PROJECT }}
@@ -16,8 +16,8 @@ env:
   GAR_REPO: book-store # artifact registry repository
 
 jobs:
-  setup-build-publish-deploy:
-    name: Setup, Build, Publish, and Deploy
+  ci:
+    name: CI Setup, Build
     runs-on: ubuntu-latest
     environment: production
 
@@ -25,24 +25,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22.5"
+
+      - name: Test
+        run: go test -v ./...
+        
       # Setup gcloud CLI
       - id: "auth"
         uses: "google-github-actions/auth@v2"
         with:
           credentials_json: "${{ secrets.GKE_SA_KEY }}"
 
-      # Configure Docker to use the gcloud command-line tool as a credential
-      # helper for authentication
-      - name: Docker configuration
-        run: |-
-          gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://$GAR_ZONE-docker.pkg.dev
-
       # Get the GKE credentials so we can deploy to the cluster
       - name: Set up GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
           cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_ZONE }}
+          location: ${{ env.GKE_ZONE }}  
+
+      # Configure Docker to use the gcloud command-line tool as a credential
+      # helper for authentication
+      - name: Docker configuration
+        run: |-
+          gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://$GAR_ZONE-docker.pkg.dev
 
       # Build the Docker image
       - name: Build
@@ -51,6 +59,14 @@ jobs:
             --build-arg GITHUB_SHA="$GITHUB_SHA" \
             --build-arg GITHUB_REF="$GITHUB_REF" \
             .
+
+  cd:
+    name: CD Publish, Deploy
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    needs: ci # Ensure CD only runs after CI
+    steps:
+      
 
       # Push the Docker image to Google Container Registry
       - name: Publish
@@ -89,7 +105,7 @@ jobs:
             --from-literal=JWT_ACCESS_SECRET_KEY="$JWT_ACCESS_SECRET_KEY" \
             --from-literal=JWT_REFRESH_SECRET_KEY="$JWT_REFRESH_SECRET_KEY" \
             -o yaml --dry-run=client | kubectl apply -f -
-            
+
       - name: Create book secrets
         env:
           DB_HOST: ${{ secrets.BOOK_DB_HOST }}
@@ -117,7 +133,7 @@ jobs:
             --from-literal=DB_PASSWORD="$DB_PASSWORD" \
             --from-literal=DB_NAME="$DB_NAME" \
             -o yaml --dry-run=client | kubectl apply -f -
-      
+
       - name: Create order secrets
         env:
           DB_HOST: ${{ secrets.ORDER_DB_HOST }}
@@ -187,10 +203,10 @@ jobs:
             -o yaml --dry-run=client | kubectl apply -f -
 
       - name: Apply deployment
-        run: |- 
-            kubectl apply -f ./build/auth/auth-deployment-github.yml
-            kubectl apply -f ./build/user/user-deployment-github.yml
-            kubectl apply -f ./build/book/book-deployment-github.yml
-            kubectl apply -f ./build/shelf/shelf-deployment-github.yml
-            kubectl apply -f ./build/order/order-deployment-github.yml
-            kubectl get pods
+        run: |-
+          kubectl apply -f ./build/auth/auth-deployment-github.yml
+          kubectl apply -f ./build/user/user-deployment-github.yml
+          kubectl apply -f ./build/book/book-deployment-github.yml
+          kubectl apply -f ./build/shelf/shelf-deployment-github.yml
+          kubectl apply -f ./build/order/order-deployment-github.yml
+          kubectl get pods
