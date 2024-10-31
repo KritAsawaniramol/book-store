@@ -9,6 +9,7 @@
   <a href="#installation">Installation</a> •
   <a href="#project-structure">Project Structure</a> •
   <a href="#endpoints">Endpoints</a> •
+  <a href="#deployment">Deployment</a> •
   <a href="#license">License</a>
 </p>
 
@@ -493,7 +494,13 @@ protoc --go_out=. --go_opt=paths=source_relative \
     ./module/shelf/shelfPb/shelfPb.proto
 ```
 
+## Deployment
 
+- **Services**: Deployed to Google Kubernetes Engine (GKE)
+- **Databases**: 
+  - Supabase 
+  - Google Cloud SQL
+- **Front-end**: Deployed to [specified platform]
 
 
 ## License
