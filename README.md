@@ -13,7 +13,6 @@
 </p>
 
 ## Built With
-<hr />
 
 - [![Go][GO.dev]][GO-url]
 - [![Gorm][GORM.io]][GORM-url]
@@ -29,7 +28,6 @@
 - [![Kubernetes][Kubernetes-badge]][Kubernetes-url]
 
 ## Architecture
-<hr />
 
 <img src="./screenshots/book-store-arch.svg" alt="arch_v3.png">
 
@@ -40,7 +38,6 @@
 
 
 ## Endpoints
-<hr />
 
 ### Authentication Service Endpoints
 
@@ -110,7 +107,6 @@
 - `GET /user_v1/user/transaction`
 
 ## Installation
-<hr />
 
 1. Clone the repository:
 
@@ -149,7 +145,6 @@
    ```
 
 ## Project Structure
-<hr/>
 
 ```text
 .
@@ -331,7 +326,6 @@
 ## Usage
 
 ### Running Tests
-<hr />
 
 To run tests, use:
 
@@ -340,7 +334,6 @@ go test ./...
 ```
 
 ### Running Docker Compose for PostgreSQL, pgAdmin, and Kafka
-<hr />
 
 start docker compose for start pgAdmin, Kafka and create PostgreSQL database for each service
 
@@ -363,7 +356,6 @@ docker-compose down
 ```
 
 ### Deploy to Kubernetes Engine
-<hr />
 Make sure you have the following installed:
 
 - Docker
@@ -508,7 +500,6 @@ protoc --go_out=. --go_opt=paths=source_relative \
 
 Distributed under the MIT License. See LICENSE for more information.
 
----
 
 > GitHub [@kritAsawaniramol](https://github.com/kritAsawaniramol) &nbsp;&middot;&nbsp;
 
