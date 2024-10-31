@@ -147,6 +147,198 @@
    go run main.go ./env/dev/.env.payment
    ```
 
+
+
+❯   ├── dev
+│   │   ├── .env.auth
+│   │   ├── .env.book
+│   │   ├── .env.order
+│   │   ├── .env.shelf
+│   │   └── .env.user
+│   ├── prod
+│   │   └── .env
+│   └── test
+│       └── .env
+
+## Project Structure
+
+```text
+.
+├── 📄 README.md
+├── 📁 asset
+│   └── 📁 image
+│       └── 📁 bookCover
+│           └── 📁 default
+│               └── 🖼️ book-store_default_bookCover.png
+├── 📁 build
+│   ├── 📄 Dockerfile
+│   ├── 📁 auth
+│   │   ├── 📄 auth-deployment-github.yml
+│   │   └── 📄 auth-service.yml
+│   ├── 📁 book
+│   │   ├── 📄 book-deployment-github.yml
+│   │   └── 📄 book-service.yml
+│   ├── 📄 book-store-ingress.yml
+│   ├── 📁 order
+│   │   ├── 📄 order-deployment-github.yml
+│   │   └── 📄 order-service.yml
+│   ├── 📁 shelf
+│   │   ├── 📄 shelf-deployment-github.yml
+│   │   └── 📄 shelf-service.yml
+│   └── 📁 user
+│       ├── 📄 user-deployment-github.yml
+│       └── 📄 user-service.yml
+├── 📄 command.txt
+├── 📁 config
+│   └── 📄 config.go
+├── 📄 docker-compose.yml
+├── 📁 env
+│   ├── 📁 dev
+│   │   ├── 📄 .env.auth
+│   │   ├── 📄 .env.book
+│   │   ├── 📄 .env.order
+│   │   ├── 📄 .env.shelf
+│   │   └── 📄 .env.user
+│   ├── 📁 prod
+│   │   └── 📄 .env
+│   └── 📁 test
+│        └── 📄 .env
+├── 📄 go.mod
+├── 📄 go.sum
+├── 📄 main.go
+├── 📁 models
+│   └── 📄 pagination.go
+├── 📁 module
+│   ├── 📁 auth
+│   │   ├── 📄 authEntity.go
+│   │   ├── 📁 authHandler
+│   │   │   ├── 📄 authGrpcHandler.go
+│   │   │   ├── 📄 authGrpcHandler_test.go
+│   │   │   ├── 📄 authHttpHandler.go
+│   │   │   └── 📄 authHttpHandler_test.go
+│   │   ├── 📄 authModel.go
+│   │   ├── 📁 authPb
+│   │   │   ├── 📄 authPb.pb.go
+│   │   │   ├── 📄 authPb.proto
+│   │   │   └── 📄 authPb_grpc.pb.go
+│   │   ├── 📁 authRepository
+│   │   │   ├── 📄 authRepository.go
+│   │   │   ├── 📄 authRepositoryImpl.go
+│   │   │   ├── 📄 authRepositoryMock.go
+│   │   │   └── 📄 authRepository_test.go
+│   │   ├── 📁 authUsecase
+│   │   │   ├── 📄 authUsecase.go
+│   │   │   ├── 📄 authUsecaseImpl.go
+│   │   │   ├── 📄 authUsecaseMock.go
+│   │   │   └── 📄 authUsecase_test.go
+│   │   └── 📄 auth_err.go
+│   ├── 📁 book
+│   │   ├── 📄 bookEntity.go
+│   │   ├── 📁 bookHandler
+│   │   │   ├── 📄 bookGrpcHandler.go
+│   │   │   └── 📄 bookHttpHandler.go
+│   │   ├── 📄 bookModel.go
+│   │   ├── 📁 bookPb
+│   │   │   ├── 📄 bookPb.pb.go
+│   │   │   ├── 📄 bookPb.proto
+│   │   │   └── 📄 bookPb_grpc.pb.go
+│   │   ├── 📁 bookRepository
+│   │   │   ├── 📄 bookRepository.go
+│   │   │   └── 📄 bookRepositoryImpl.go
+│   │   └── 📁 bookUsecase
+│   │       ├── 📄 bookUsecase.go
+│   │       └── 📄 bookUsecaseImpl.go
+│   ├── 📁 middleware
+│   │   ├── 📁 middlewareHandler
+│   │   │   └── 📄 middlewareHttpHander.go
+│   │   ├── 📁 middlewareRepository
+│   │   │   ├── 📄 middlewareRepositoryImpl.go
+│   │   │   └── 📄 middlewareRepositoy.go
+│   │   └── 📁 middlewareUsecase
+│   │       ├── 📄 middlewareUsecase.go
+│   │       └── 📄 middlewareUsecaseImpl.go
+│   ├── 📁 order
+│   │   ├── 📄 orderEntity.go
+│   │   ├── 📁 orderHandler
+│   │   │   ├── 📄 orderConsumeHandler.go
+│   │   │   └── 📄 orderHttpHandler.go
+│   │   ├── 📄 orderModel.go
+│   │   ├── 📁 orderRepository
+│   │   │   ├── 📄 orderRepository.go
+│   │   │   └── 📄 orderRepositoryImpl.go
+│   │   └── 📁 orderUsecase
+│   │       ├── 📄 orderUsecase.go
+│   │       └── 📄 orderUsecaseImpl.go
+│   ├── 📁 shelf
+│   │   ├── 📄 shelfEntity.go
+│   │   ├── 📁 shelfHandler
+│   │   │   ├── 📄 shelfConsumeHandler.go
+│   │   │   ├── 📄 shelfGrpcHandler.go
+│   │   │   ├── 📄 shelfHttpHandler.go
+│   │   │   └── 📄 shelfQueueHandler.go
+│   │   ├── 📄 shelfModel.go
+│   │   ├── 📁 shelfPb
+│   │   │   ├── 📄 shelfPb.pb.go
+│   │   │   ├── 📄 shelfPb.proto
+│   │   │   └── 📄 shelfPb_grpc.pb.go
+│   │   ├── 📁 shelfRepository
+│   │   │   ├── 📄 shelfRepository.go
+│   │   │   └── 📄 shelfRepositoryImpl.go
+│   │   └── 📁 shelfUsecase
+│   │       ├── 📄 shelfUsecase.go
+│   │       └── 📄 shelfUsecaseImpl.go
+│   └── 📁 user
+│       ├── 📄 userEntity.go
+│       ├── 📁 userHandler
+│       │   ├── 📄 userComsumeHandler.go
+│       │   ├── 📄 userGrpcHandler.go
+│       │   ├── 📄 userHttpHandler.go
+│       │   └── 📄 userQueueHandler.go
+│       ├── 📄 userModel.go
+│       ├── 📁 userPb
+│       │   ├── 📄 userPb.pb.go
+│       │   ├── 📄 userPb.proto
+│       │   ├── 📄 userPb_grpc.pb.go
+│       │   └── 📄 userPb_grpcMock.go
+│       ├── 📁 userRepository
+│       │   ├── 📄 userRepository.go
+│       │   └── 📄 userRepositoryImpl.go
+│       └── 📁 userUsecase
+│           ├── 📄 userUsecase.go
+│           └── 📄 userUsecaseImpl.go
+├── 📁 pkg
+│   ├── 📁 database
+│   │   ├── 📄 database.go
+│   │   ├── 📁 migration
+│   │   │   └── 📄 migration.go
+│   │   └── 📄 postgres.go
+│   ├── 📁 grpccon
+│   │   └── 📄 grpccon.go
+│   ├── 📁 jwtAuth
+│   │   └── 📄 jwtAuth.go
+│   ├── 📁 queue
+│   │   ├── 📄 kafka.go
+│   │   └── 📁 topic
+│   │       └── 📄 topic.go
+│   └── 📁 request
+│       ├── 📄 err.go
+│       └── 📄 request.go
+├── 📁 server
+│   ├── 📄 auth.go
+│   ├── 📄 book.go
+│   ├── 📄 ginServer.go
+│   ├── 📄 healthCheck.go
+│   ├── 📄 order.go
+│   ├── 📄 server.go
+│   ├── 📄 shelf.go
+│   └── 📄 user.go
+├── 📁 test
+│   └── 📄 auth_test.go
+└── 📁 util
+    └── 📄 json.go
+```
+
+
 ## Usage
 
 ### Running Tests
