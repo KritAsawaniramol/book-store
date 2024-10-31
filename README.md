@@ -33,9 +33,9 @@
 <img src="./screenshots/book-store-arch.svg" alt="arch_v3.png">
 
 ## Saga pattern for distributed transaction
-<img src="./screenshots/sagaPattern2.svg" alt="sagaPattern2.svg">
+<img src="./screenshots/saga1.svg" alt="sagaPattern2.svg">
 
-<img src="./screenshots/sagaPattern.svg" alt="sagaPattern.svg">
+<img src="./screenshots/saga2.svg" alt="sagaPattern.svg">
 
 
 ## Endpoints
