@@ -13,3 +13,6 @@ README.md
 /build
 /asset/image/bookCover/*.*
 /asset/book/*
+/screenshots
+command.txt
+*Mock.go
