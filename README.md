@@ -7,6 +7,7 @@
   <a href="#built-with">Built With</a> •
   <a href="#architecture">Architecture</a> •
   <a href="#installation">Installation</a> •
+  <a href="#project-structure">Project Structure</a> •
   <a href="#endpoints">Endpoints</a> •
   <a href="#license">License</a>
 </p>
@@ -147,20 +148,8 @@
    go run main.go ./env/dev/.env.payment
    ```
 
-
-
-❯   ├── dev
-│   │   ├── .env.auth
-│   │   ├── .env.book
-│   │   ├── .env.order
-│   │   ├── .env.shelf
-│   │   └── .env.user
-│   ├── prod
-│   │   └── .env
-│   └── test
-│       └── .env
-
 ## Project Structure
+<hr/>
 
 ```text
 .
