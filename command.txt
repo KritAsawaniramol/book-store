@@ -5,12 +5,19 @@ go run pkg/database/migration/migration.go ./env/dev/.env.order
 go run pkg/database/migration/migration.go ./env/dev/.env.shelf
 go run pkg/database/migration/migration.go ./env/dev/.env.user
 
+### Kafka
+Create topic
+dev:
+go run pkg/queue/topic/topic.go ./env/prod/.env.book
+
 # Start Server
 go run main.go ./env/dev/.env.auth
 go run main.go ./env/dev/.env.book
 go run main.go ./env/dev/.env.order
 go run main.go ./env/dev/.env.shelf
 go run main.go ./env/dev/.env.user
+
+
 
 
 ##Regenerate gRPC code
@@ -82,3 +89,12 @@ kubectl exec --stdin --tty <Pod name> -- /bin/bash
 ### Test
 ❯ go test ./...
 ❯ go test github.com/kritAsawaniramol/book-store/module/auth/authUsecase --cover
+
+### gcloud
+❯ gcloud auth login
+❯ gcloud config set project book-s-439214
+❯ docker buildx build --platform linux/amd64 -f build/Dockerfile -t asia-southeast1-docker.pkg.dev/book-s-439214/book-store:latest .
+❯ docker push asia-southeast1-docker.pkg.dev/book-s-439214/book-store:latest
+❯ gcloud container clusters get-credentials cluster-1 --zone asia-southeast1-b --project book-s-439214
+❯ kubectl config get-contexts
+❯ kubectl config use-context gke_book-s-439214_asia-southeast1-b_cluster-1
