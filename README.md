@@ -500,7 +500,7 @@ protoc --go_out=. --go_opt=paths=source_relative \
 - **Databases**: 
   - Supabase 
   - Google Cloud SQL
-- **Front-end**: Deployed to [specified platform]
+- **Front-end**: Deployed to vercel
 
 
 ## License
